@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>LOCAL CO</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- SWITCHER -->
+  <div id="view-switcher" class="view active">
+    <h1>LOCAL <span>CO</span></h1>
+    <p>Plateforme de gestion et de vente pour les commerçants de proximité</p>
+    <div class="sw-cards">
+      <div class="sw-card" onclick="go('client')">
+        <div class="icon">🛍️</div>
+        <h2>Espace client</h2>
+        <p>Commander en ligne auprès de la boulangerie</p>
+      </div>
+      <div class="sw-card" onclick="go('merchant')">
+        <div class="icon">🏪</div>
+        <h2>Espace commerçant</h2>
+        <p>Caisse, stock, commandes reçues</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENT -->
+  <div id="view-client" class="view">
+    <div id="c-shop">
+      <header class="shop-topbar">
+        <div style="min-width:0;flex:1">
+          <div class="shop-logo">LOCAL <span>CO</span></div>
+          <div class="shop-sub">Boulangerie Maxime · Commande en ligne</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="cbtn" onclick="go('switcher')" style="font-size:12px;padding:7px 10px">← Accueil</button>
+          <button class="cbtn" onclick="toggleCart()">🛒 <span class="cart-badge" id="c-badge">0</span></button>
+        </div>
+      </header>
+      <div class="shop-body">
+        <div class="shop-hero">
+          <div class="hero-icon">🥖</div>
+          <div>
+            <h2>Commandez en avance</h2>
+            <p>Retrait en boutique ou sur nos marchés · Paiement au retrait</p>
+          </div>
+        </div>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+    </div>
+    <div id="c-confirm" style="display:none">
+      <header class="shop-topbar">
+        <div class="shop-logo">LOCAL <span>CO</span></div>
+        <button class="cbtn" onclick="go('switcher')" style="font-size:12px">← Accueil</button>
+      </header>
+      <div class="confirm-screen">
+        <div class="confirm-icon">🎉</div>
+        <h2>Commande confirmée !</h2>
+        <p style="text-align:center;color:var(--text2);font-size:13px;margin-bottom:4px">Récapitulatif de votre commande
+          :</p>
+        <div class="email-recap" id="c-recap"></div>
+        <div class="rgpd-note">🔒 <strong>Données personnelles (RGPD)</strong> — Vos informations sont utilisées
+          uniquement pour le traitement de cette commande. Elles ne sont pas transmises à des tiers. Conformément au
+          RGPD, vous disposez d'un droit d'accès, de rectification et de suppression. Contact : maxime@boulangerie.fr
+        </div>
+        <div style="margin-top:16px;text-align:center"><button class="btn btn-g" onclick="resetClient()">Passer une
+            nouvelle commande</button></div>
+      </div>
+    </div>
+    <div class="cart-overlay" id="c-overlay" onclick="toggleCart()"></div>
+    <div class="cart-panel" id="c-panel">
+      <div class="cp-head"><span class="cp-title">🛒 Mon panier</span><button class="cp-close"
+          onclick="toggleCart()">✕</button></div>
+      <div class="cp-items" id="c-items">
+        <div class="cp-empty">Votre panier est vide</div>
+      </div>
+      <div class="cp-foot">
+        <div class="total-row"><span class="total-lbl">Total TTC</span><span class="total-val" id="c-total">0,00
+            €</span></div>
+        <div class="stock-error" id="c-stock-err"></div>
+        <div class="cfield"><label>Nom / Prénom *</label><input type="text" id="cl-nom" placeholder="Marie Dupont" />
+        </div>
+        <div class="cfield"><label>Email *</label><input type="email" id="cl-email" placeholder="marie@exemple.fr" />
+        </div>
+        <div class="cfield"><label>Téléphone</label><input type="tel" id="cl-tel" placeholder="06 12 34 56 78" /></div>
+        <div class="cfield"><label>Lieu de retrait</label><select id="cl-lieu">
+            <option>En boutique</option>
+            <option>Marché du samedi matin</option>
+            <option>Marché du dimanche</option>
+          </select></div>
+        <div class="cfield"><label>Date souhaitée</label><input type="date" id="cl-date" /></div>
+        <button class="btn btn-g" style="width:100%" onclick="passerCommande()">✓ Confirmer ma commande</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MERCHANT -->
+  <div id="view-merchant" class="view">
+    <div class="m-shell">
+      <aside class="sidebar">
+        <button class="back-btn" onclick="go('switcher')">← Accueil</button>
+        <div class="s-logo">
+          <h1>LOCAL <span>CO</span></h1>
+          <p>Boulangerie Maxime</p>
+        </div>
+        <nav class="s-nav">
+          <button class="nav-it active" data-s="caisse" onclick="showS('caisse',this)"><svg viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+              <line x1="12" y1="12" x2="12" y2="16" />
+              <line x1="10" y1="14" x2="14" y2="14" />
+            </svg>Caisse</button>
+          <button class="nav-it" data-s="commandes" onclick="showS('commandes',this)"><svg viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 001.63 1.21H19a2 2 0 001.63-1.21L23 6H6" />
+            </svg>Commandes en ligne<span class="n-badge" id="sb-badge">0</span></button>
+          <button class="nav-it" data-s="stock" onclick="showS('stock',this)"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path
+                d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+            </svg>Stock</button>
+          <button class="nav-it" data-s="articles" onclick="showS('articles',this)"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+              <rect x="9" y="3" width="6" height="4" rx="1" />
+            </svg>Articles</button>
+          <button class="nav-it" data-s="suivi" onclick="showS('suivi',this)"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>Suivi / Compta</button>
+          <button class="nav-it" data-s="cloture" onclick="showS('cloture',this)"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>Clôture de caisse</button>
+          <button class="nav-it" data-s="users" onclick="showS('users',this)"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+            </svg>Utilisateurs</button>
+        </nav>
+        <div class="s-foot">
+          <div class="u-chip">
+            <div class="u-av">MB</div>
+            <div class="u-info">
+              <p>Maxime Bernard</p>
+              <p>Gérant</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <main class="m-main">
+
+        <!-- CAISSE -->
+        <div class="screen active" id="sc-caisse">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Caisse</div>
+              <div class="pg-sub">Ventes en boutique · <span id="caisse-date"></span></div>
+            </div>
+            <button class="btn btn-o" style="font-size:12px" onclick="openPerte()">📋 Perte</button>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-t">Articles</div>
+              <div class="art-grid" id="art-grid"></div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-t">Panier</div>
+                <div id="pan-list"></div>
+                <div id="pan-empty" style="color:var(--text2);font-size:13px;padding:7px 0">Aucun article sélectionné
+                </div>
+                <div class="rem-row"><label>Remise</label><input type="number" id="rem-in" placeholder="0" min="0"
+                    max="100" /><label>%</label></div>
+                <div class="tva-row"><label>TVA</label>
+                  <select id="tva-sel">
+                    <option value="0.055">5,5% (alimentaire)</option>
+                    <option value="0.10">10% (restauration)</option>
+                    <option value="0.20">20% (standard)</option>
+                  </select>
+                </div>
+                <div class="t-bar">
+                  <div>
+                    <div class="t-sub" id="t-ht-line">HT : —</div>
+                    <div class="t-sub" id="t-tva-line">TVA : —</div>
+                  </div>
+                  <div>
+                    <div style="font-size:11px;opacity:.75;text-align:right">Total TTC</div>
+                    <div class="t-amt" id="t-disp">0,00 €</div>
+                  </div>
+                </div>
+                <div class="pay-row">
+                  <button class="pbtn" onclick="encaisser('especes')">💵<span>Espèces</span></button>
+                  <button class="pbtn" onclick="encaisser('cb')">💳<span>Carte</span></button>
+                  <button class="pbtn pri" onclick="encaisser('cheque')">✅<span>Chèque</span></button>
+                </div>
+              </div>
+              <div id="ticket-z"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMANDES -->
+        <div class="screen" id="sc-commandes">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Commandes en ligne <span class="ndot" id="cmd-dot" style="display:none"></span>
+              </div>
+              <div class="pg-sub">Passées par les clients</div>
+            </div>
+          </div>
+          <div id="cmd-list"></div>
+        </div>
+
+        <!-- STOCK -->
+        <div class="screen" id="sc-stock">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Stock</div>
+              <div class="pg-sub">Matières premières & articles</div>
+            </div>
+            <button class="btn btn-g" style="font-size:12px" onclick="openReappro()">+ Réappro</button>
+          </div>
+          <div id="st-alerts"></div>
+          <div class="tabs">
+            <button class="tab active" onclick="swTab('t-mp',this)">Matières premières</button>
+            <button class="tab" onclick="swTab('t-arts',this)">Articles finis</button>
+          </div>
+          <div id="t-mp">
+            <div class="dt-wrap card" style="padding:0;overflow:hidden">
+              <div class="tbl-wrap">
+                <table class="dt">
+                  <thead>
+                    <tr>
+                      <th>Matière</th>
+                      <th>Stock</th>
+                      <th>Cond.</th>
+                      <th>Coût</th>
+                      <th>Valeur</th>
+                      <th>Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mp-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div id="mp-cards"></div>
+            <div class="s-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
+              <div class="s-card">
+                <div class="s-lbl">Valeur stock MP</div>
+                <div class="s-val g" id="v-mp">—</div>
+              </div>
+              <div class="s-card">
+                <div class="s-lbl">Alertes orange</div>
+                <div class="s-val a" id="cnt-o">0</div>
+              </div>
+              <div class="s-card">
+                <div class="s-lbl">Critiques</div>
+                <div class="s-val r" id="cnt-r">0</div>
+              </div>
+            </div>
+          </div>
+          <div id="t-arts" style="display:none">
+            <div class="dt-wrap card" style="padding:0;overflow:hidden">
+              <div class="tbl-wrap">
+                <table class="dt">
+                  <thead>
+                    <tr>
+                      <th>Article</th>
+                      <th>Stock</th>
+                      <th>Prix TTC</th>
+                      <th>Coût MP</th>
+                      <th>Marge</th>
+                      <th>Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody id="as-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div id="as-cards"></div>
+          </div>
+        </div>
+
+        <!-- ARTICLES -->
+        <div class="screen" id="sc-articles">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Articles</div>
+              <div class="pg-sub">Catalogue & nomenclature</div>
+            </div>
+            <button class="btn btn-g" style="font-size:12px" onclick="openArticle()">+ Nouvel article</button>
+          </div>
+          <div class="three-col" id="art-cards"></div>
+        </div>
+
+        <!-- SUIVI -->
+        <div class="screen" id="sc-suivi">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Suivi & Comptabilité</div>
+              <div class="pg-sub">Journée en cours</div>
+            </div>
+          </div>
+          <div class="s-grid">
+            <div class="s-card">
+              <div class="s-lbl">CA TTC</div>
+              <div class="s-ico">💰</div>
+              <div class="s-val g" id="sv-rec">0,00 €</div>
+            </div>
+            <div class="s-card">
+              <div class="s-lbl">CA HT</div>
+              <div class="s-ico">📊</div>
+              <div class="s-val" id="sv-ht">0,00 €</div>
+            </div>
+            <div class="s-card">
+              <div class="s-lbl">TVA collectée</div>
+              <div class="s-ico">🧾</div>
+              <div class="s-val" id="sv-tva">0,00 €</div>
+            </div>
+            <div class="s-card">
+              <div class="s-lbl">Nb de ventes</div>
+              <div class="s-ico">🔖</div>
+              <div class="s-val" id="sv-nb">0</div>
+            </div>
+          </div>
+          <div class="s-grid">
+            <div class="s-card">
+              <div class="s-lbl">Espèces</div>
+              <div class="s-val g" id="sv-esp">0,00 €</div>
+            </div>
+            <div class="s-card">
+              <div class="s-lbl">CB</div>
+              <div class="s-val g" id="sv-cb">0,00 €</div>
+            </div>
+            <div class="s-card">
+              <div class="s-lbl">Chèques</div>
+              <div class="s-val g" id="sv-chq">0,00 €</div>
+            </div>
+            <div class="s-card">
+              <div class="s-lbl">Marge brute</div>
+              <div class="s-val g" id="sv-marge">0,00 €</div>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-t">Ventes par article</div>
+              <table class="s-tbl">
+                <thead>
+                  <tr>
+                    <th>Article</th>
+                    <th>Qté</th>
+                    <th>CA TTC</th>
+                    <th>Marge</th>
+                  </tr>
+                </thead>
+                <tbody id="sv-tbody"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-t">Historique du jour</div>
+              <div id="sv-hist"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLOTURE -->
+        <div class="screen" id="sc-cloture">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Clôture de caisse</div>
+              <div class="pg-sub">Fermeture journalière & historique</div>
+            </div>
+          </div>
+          <div class="cloture-banner">
+            <div class="cloture-info">
+              <h3>Caisse du <span id="cl-today"></span></h3>
+              <p id="cl-status-txt">Caisse ouverte — en cours</p>
+            </div>
+            <button class="btn" style="background:#fff;color:var(--green);font-weight:700;"
+              onclick="cloturerCaisse()">🔒 Clôturer la caisse</button>
+          </div>
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-t">Résumé à clôturer</div>
+            <div class="s-grid" style="margin-bottom:0">
+              <div class="s-card">
+                <div class="s-lbl">CA TTC</div>
+                <div class="s-val g" id="cl-rec">0,00 €</div>
+              </div>
+              <div class="s-card">
+                <div class="s-lbl">Espèces</div>
+                <div class="s-val" id="cl-esp">0,00 €</div>
+              </div>
+              <div class="s-card">
+                <div class="s-lbl">CB</div>
+                <div class="s-val" id="cl-cb">0,00 €</div>
+              </div>
+              <div class="s-card">
+                <div class="s-lbl">Nb ventes</div>
+                <div class="s-val" id="cl-nb">0</div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div class="card-t" style="margin:0">Historique des journées</div>
+            <button class="btn btn-o" style="font-size:12px" onclick="exportCSV()">⬇ Export CSV</button>
+          </div>
+          <div id="hist-jours"></div>
+        </div>
+
+        <!-- USERS -->
+        <div class="screen" id="sc-users">
+          <div class="topbar">
+            <div>
+              <div class="pg-title">Utilisateurs</div>
+              <div class="pg-sub">Gestion des accès</div>
+            </div><button class="btn btn-g" style="font-size:12px"
+              onclick="document.getElementById('m-user').style.display='flex'">+ Ajouter</button>
+          </div>
+          <div class="dt-wrap card" style="padding:0;overflow:hidden">
+            <div class="tbl-wrap">
+              <table class="dt">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Rôle</th>
+                    <th>Email</th>
+                    <th>Accès</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="u-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="u-cards"></div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Bottom nav mobile -->
+    <nav class="bottom-nav">
+      <button class="bn-it active" data-s="caisse" onclick="showS('caisse',this)"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" />
+          <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+          <line x1="12" y1="12" x2="12" y2="16" />
+          <line x1="10" y1="14" x2="14" y2="14" />
+        </svg>Caisse</button>
+      <button class="bn-it" data-s="commandes" onclick="showS('commandes',this)"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 001.63 1.21H19a2 2 0 001.63-1.21L23 6H6" />
+        </svg>Cmd<span class="bn-badge" id="bn-badge" style="display:none">0</span></button>
+      <button class="bn-it" data-s="stock" onclick="showS('stock',this)"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path
+            d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+        </svg>Stock</button>
+      <button class="bn-it" data-s="suivi" onclick="showS('suivi',this)"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>Suivi</button>
+      <button class="bn-it" data-s="cloture" onclick="showS('cloture',this)"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>Clôture</button>
+    </nav>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-bg" id="m-article" style="display:none">
+    <div class="modal">
+      <div class="modal-hd"><span class="modal-tt" id="m-art-tt">Nouvel article</span><button class="modal-x"
+          onclick="cm('m-article')">✕</button></div>
+      <div class="field"><label>Nom</label><input type="text" id="a-nom" placeholder="Pain de campagne" /></div>
+      <div class="field"><label>Prix TTC (€)</label><input type="number" id="a-prix" placeholder="2.50" step="0.01"
+          min="0" /></div>
+      <div class="field"><label>Taux TVA</label><select id="a-tva">
+          <option value="0.055">5,5% (alimentaire)</option>
+          <option value="0.10">10% (restauration)</option>
+          <option value="0.20">20% (standard)</option>
+        </select></div>
+      <div class="field"><label>Stock initial</label><input type="number" id="a-qty" placeholder="20" min="0" /></div>
+      <div class="field"><label>Description</label><textarea id="a-desc" placeholder="Description…"></textarea></div>
+      <div class="field"><label>Emoji</label><input type="text" id="a-emoji" placeholder="🥖" maxlength="4" /></div>
+      <div class="field"><label>En ligne</label><select id="a-online">
+          <option value="1">Oui</option>
+          <option value="0">Non</option>
+        </select></div>
+      <div class="info-box">ℹ Définissez les matières premières utilisées par article via l'onglet <strong>Articles →
+          Modifier → Nomenclature</strong> après création.</div>
+      <div class="btn-row"><button class="btn btn-g" style="flex:1" onclick="saveArticle()">Enregistrer</button><button
+          class="btn btn-o" onclick="cm('m-article')">Annuler</button></div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="m-nomen" style="display:none">
+    <div class="modal">
+      <div class="modal-hd"><span class="modal-tt" id="m-nomen-tt">Nomenclature</span><button class="modal-x"
+          onclick="cm('m-nomen')">✕</button></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Matières premières consommées à chaque vente de
+        cet article. Ces quantités sont automatiquement déduites du stock MP lors d'une vente.</p>
+      <div id="nomen-rows"></div>
+      <button class="btn btn-g" style="width:100%;margin-top:10px" onclick="saveNomen()">Enregistrer la
+        nomenclature</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="m-perte" style="display:none">
+    <div class="modal">
+      <div class="modal-hd"><span class="modal-tt">Déclarer une perte</span><button class="modal-x"
+          onclick="cm('m-perte')">✕</button></div>
+      <div class="field"><label>Article</label><select id="p-art"></select></div>
+      <div class="field"><label>Quantité perdue</label><input type="number" id="p-qty" placeholder="2" min="1" /></div>
+      <div class="field"><label>Motif</label><input type="text" id="p-mot" placeholder="Invendu, abîmé…" /></div>
+      <button class="btn btn-d" style="width:100%" onclick="savePerte()">Confirmer la perte</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="m-reappro" style="display:none">
+    <div class="modal">
+      <div class="modal-hd"><span class="modal-tt">Réapprovisionner</span><button class="modal-x"
+          onclick="cm('m-reappro')">✕</button></div>
+      <div class="field"><label>Matière première</label><select id="r-mp"></select></div>
+      <div class="field"><label>Quantité à ajouter</label><input type="number" id="r-qty" placeholder="25" min="0" />
+      </div>
+      <button class="btn btn-g" style="width:100%" onclick="saveReappro()">Ajouter au stock</button>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="m-user" style="display:none">
+    <div class="modal">
+      <div class="modal-hd"><span class="modal-tt">Ajouter un utilisateur</span><button class="modal-x"
+          onclick="cm('m-user')">✕</button></div>
+      <div class="field"><label>Nom</label><input type="text" id="u-nom" placeholder="Jean Dupont" /></div>
+      <div class="field"><label>Email</label><input type="email" id="u-email" placeholder="jean@boulangerie.fr" /></div>
+      <div class="field"><label>Rôle</label><select id="u-role">
+          <option>Vendeur</option>
+          <option>Gestionnaire</option>
+          <option>Gérant</option>
+        </select></div>
+      <div class="rgpd-box">🔒 L'email sera utilisé uniquement pour l'accès à la plateforme. Conformément au RGPD, cet
+        utilisateur peut demander la suppression de son compte à tout moment.</div>
+      <button class="btn btn-g" style="width:100%;margin-top:10px" onclick="saveUser()">Créer</button>
+    </div>
+  </div>
+
+  <div class="suc-bg" id="m-suc" style="display:none">
+    <div class="suc-box">
+      <div class="suc-ic">✅</div>
+      <div class="suc-tt" id="suc-tt"></div>
+      <div class="suc-sb" id="suc-sb"></div><button class="btn btn-g" style="width:100%"
+        onclick="cm('m-suc')">OK</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
