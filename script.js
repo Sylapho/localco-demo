@@ -3,38 +3,27 @@
 // ══════════════════════════════════════════
 const DEFAULT = {
     arts: [
-        {
-            id: 1, nom: 'Pain de campagne', prix: 2.20, qty: 18, desc: 'Pain au levain naturel', e: '🍞', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.35 }, { mpId: 4, qte: 0.005 }, { mpId: 6, qte: 0.008 }]
-        },
-        {
-            id: 2, nom: 'Croissant', prix: 1.20, qty: 24, desc: 'Croissant pur beurre', e: '🥐', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.08 }, { mpId: 2, qte: 0.04 }, { mpId: 5, qte: 1 }]
-        },
-        {
-            id: 3, nom: 'Pain bâtard', prix: 1.80, qty: 12, desc: 'Baguette tradition', e: '🥖', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.25 }, { mpId: 4, qte: 0.004 }]
-        },
-        {
-            id: 4, nom: 'Brioche', prix: 3.50, qty: 8, desc: 'Brioche moelleuse', e: '🧁', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.22 }, { mpId: 2, qte: 0.10 }, { mpId: 5, qte: 2 }, { mpId: 7, qte: 0.03 }]
-        },
-        {
-            id: 5, nom: 'Brownie', prix: 2.80, qty: 15, desc: 'Chocolat noir intense', e: '🍫', online: true, tva: 0.055,
-            nomen: [{ mpId: 3, qte: 0.10 }, { mpId: 2, qte: 0.08 }, { mpId: 5, qte: 2 }, { mpId: 7, qte: 0.06 }]
-        },
-        {
-            id: 6, nom: 'Pain au choco', prix: 1.00, qty: 30, desc: 'Pur beurre feuilleté', e: '🥐', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.07 }, { mpId: 3, qte: 0.03 }, { mpId: 2, qte: 0.03 }]
-        },
-        {
-            id: 7, nom: 'Flan', prix: 2.50, qty: 10, desc: 'Flan pâtissier', e: '🍮', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.15 }, { mpId: 5, qte: 2 }, { mpId: 8, qte: 0.15 }, { mpId: 7, qte: 0.04 }]
-        },
-        {
-            id: 8, nom: 'Madeleine', prix: 0.80, qty: 40, desc: 'Madeleine citron', e: '🍋', online: true, tva: 0.055,
-            nomen: [{ mpId: 1, qte: 0.04 }, { mpId: 2, qte: 0.02 }, { mpId: 5, qte: 0.5 }, { mpId: 7, qte: 0.02 }]
-        },
+        { id: 1, nom: 'Pain de campagne', prix: 2.20, qty: 18, desc: 'Pain au levain naturel', e: '🍞', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.35 }, { mpId: 4, qte: 0.005 }, { mpId: 6, qte: 0.008 }] },
+        { id: 2, nom: 'Croissant', prix: 1.20, qty: 24, desc: 'Croissant pur beurre', e: '🥐', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.08 }, { mpId: 2, qte: 0.04 }, { mpId: 5, qte: 1 }] },
+        { id: 3, nom: 'Pain bâtard', prix: 1.80, qty: 12, desc: 'Baguette tradition', e: '🥖', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.25 }, { mpId: 4, qte: 0.004 }] },
+        { id: 4, nom: 'Brioche', prix: 3.50, qty: 8, desc: 'Brioche moelleuse', e: '🧁', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.22 }, { mpId: 2, qte: 0.10 }, { mpId: 5, qte: 2 }, { mpId: 7, qte: 0.03 }] },
+        { id: 5, nom: 'Brownie', prix: 2.80, qty: 15, desc: 'Chocolat noir intense', e: '🍫', online: true, tva: 0.055, nomen: [{ mpId: 3, qte: 0.10 }, { mpId: 2, qte: 0.08 }, { mpId: 5, qte: 2 }, { mpId: 7, qte: 0.06 }] },
+        { id: 6, nom: 'Pain au choco', prix: 1.00, qty: 30, desc: 'Pur beurre feuilleté', e: '🥐', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.07 }, { mpId: 3, qte: 0.03 }, { mpId: 2, qte: 0.03 }] },
+        { id: 7, nom: 'Flan', prix: 2.50, qty: 10, desc: 'Flan pâtissier', e: '🍮', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.15 }, { mpId: 5, qte: 2 }, { mpId: 8, qte: 0.15 }, { mpId: 7, qte: 0.04 }] },
+        { id: 8, nom: 'Madeleine', prix: 0.80, qty: 40, desc: 'Madeleine citron', e: '🍋', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.04 }, { mpId: 2, qte: 0.02 }, { mpId: 5, qte: 0.5 }, { mpId: 7, qte: 0.02 }] },
+        { id: 9, nom: 'Tartelette Fraise', prix: 3.80, qty: 12, desc: 'Pâte sablée et fraises', e: '🍓', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.05 }, { mpId: 2, qte: 0.03 }, { mpId: 5, qte: 1 }, { mpId: 10, qte: 0.10 }] },
+        { id: 10, nom: 'Éclair Café', prix: 2.90, qty: 15, desc: 'Crème café onctueuse', e: '☕', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.04 }, { mpId: 5, qte: 2 }, { mpId: 8, qte: 0.10 }, { mpId: 14, qte: 0.005 }] },
+        { id: 11, nom: 'Cookie Pécan', prix: 2.20, qty: 20, desc: 'Moelleux aux noix', e: '🍪', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.06 }, { mpId: 2, qte: 0.04 }, { mpId: 9, qte: 0.02 }] },
+        { id: 12, nom: 'Quiche Lorraine', prix: 4.50, qty: 10, desc: 'Lardons et crème', e: '🥧', online: true, tva: 0.10, nomen: [{ mpId: 1, qte: 0.08 }, { mpId: 13, qte: 0.05 }, { mpId: 11, qte: 0.10 }, { mpId: 5, qte: 1 }] },
+        { id: 13, nom: 'Chausson Pommes', prix: 1.90, qty: 14, desc: 'Feuilletage maison', e: '🍎', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.07 }, { mpId: 2, qte: 0.05 }] },
+        { id: 14, nom: 'Muffin Myrtille', prix: 2.50, qty: 16, desc: 'Baies sauvages', e: '🫐', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.10 }, { mpId: 5, qte: 1 }, { mpId: 7, qte: 0.05 }] },
+        // --- Nouveaux articles ---
+        { id: 15, nom: 'Pain de Seigle', prix: 2.60, qty: 10, desc: 'Idéal pour les fruits de mer', e: '🥖', online: true, tva: 0.055, nomen: [{ mpId: 15, qte: 0.30 }, { mpId: 6, qte: 0.008 }] },
+        { id: 16, nom: 'Paris-Brest', prix: 4.20, qty: 6, desc: 'Crème mousseline praliné', e: '🍩', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.05 }, { mpId: 2, qte: 0.06 }, { mpId: 5, qte: 2 }, { mpId: 12, qte: 0.04 }] },
+        { id: 17, nom: 'Fougasse Olive', prix: 3.20, qty: 8, desc: 'Olives vertes et herbes', e: '🍃', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.20 }, { mpId: 6, qte: 0.005 }] },
+        { id: 18, nom: 'Jambon-Beurre', prix: 4.80, qty: 15, desc: 'Le classique parisien', e: '🥪', online: true, tva: 0.10, nomen: [{ mpId: 1, qte: 0.15 }, { mpId: 2, qte: 0.02 }, { mpId: 16, qte: 2 }] },
+        { id: 19, nom: 'Tartelette Citron', prix: 3.50, qty: 10, desc: 'Meringue fondante', e: '🍋', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.04 }, { mpId: 5, qte: 1 }, { mpId: 7, qte: 0.05 }, { mpId: 17, qte: 0.03 }] },
+        { id: 20, nom: 'Financier', prix: 1.50, qty: 25, desc: 'Poudre d’amandes', e: '🧈', online: true, tva: 0.055, nomen: [{ mpId: 12, qte: 0.03 }, { mpId: 2, qte: 0.03 }, { mpId: 5, qte: 1 }] }
     ],
     mps: [
         { id: 1, nom: 'Farine T65', stock: 25, u: 'kg', cout: 0.85, seuil: 5, cond: 'Sac 25kg' },
@@ -45,15 +34,29 @@ const DEFAULT = {
         { id: 6, nom: 'Sel', stock: 3.5, u: 'kg', cout: 0.30, seuil: 0.5, cond: 'Paquet 1kg' },
         { id: 7, nom: 'Sucre', stock: 6, u: 'kg', cout: 1.20, seuil: 2, cond: 'Paquet 1kg' },
         { id: 8, nom: 'Lait', stock: 10, u: 'L', cout: 0.95, seuil: 4, cond: 'Brique 1L' },
+        { id: 9, nom: 'Noix de pécan', stock: 2.5, u: 'kg', cout: 22.0, seuil: 0.5, cond: 'Sachet 1kg' },
+        { id: 10, nom: 'Fraises', stock: 5.0, u: 'kg', cout: 8.50, seuil: 1.5, cond: 'Caissette 2kg' },
+        { id: 11, nom: 'Crème Liquide', stock: 12, u: 'L', cout: 3.20, seuil: 3, cond: 'Brique 1L' },
+        { id: 12, nom: 'Amandes Poudre', stock: 4.0, u: 'kg', cout: 14.5, seuil: 1, cond: 'Sac 1kg' },
+        { id: 13, nom: 'Lardons', stock: 3.0, u: 'kg', cout: 9.80, seuil: 1, cond: 'Barquette 500g' },
+        { id: 14, nom: 'Café Extrait', stock: 0.5, u: 'L', cout: 45.0, seuil: 0.1, cond: 'Flacon 500ml' },
+        { id: 15, nom: 'Farine Seigle', stock: 10, u: 'kg', cout: 1.10, seuil: 3, cond: 'Sac 10kg' },
+        { id: 16, nom: 'Tranches Jambon', stock: 40, u: 'u', cout: 0.45, seuil: 10, cond: 'Paquet 20' },
+        { id: 17, nom: 'Purée Citron', stock: 2.0, u: 'kg', cout: 18.0, seuil: 0.5, cond: 'Pot 1kg' }
     ],
     users: [
         { id: 1, nom: 'Maxime Bernard', role: 'Gérant', email: 'maxime@boulangerie.fr', acces: 'Tout' },
         { id: 2, nom: 'Lucie Morin', role: 'Vendeur', email: 'lucie@boulangerie.fr', acces: 'Caisse, Stock' },
+        { id: 3, nom: 'Thomas Petit', role: 'Pâtissier', email: 'thomas@boulangerie.fr', acces: 'Stock, Articles' }
     ],
     suivi: { rec: 0, ht: 0, tvaCol: 0, nb: 0, esp: 0, cb: 0, chq: 0, marge: 0, byArt: {}, hist: [] },
-    journees: [],
+    // Simulation d'un historique passé
+    journees: [
+        { date: '17/04/2026', rec: 450.50, ht: 420.00, tvaCol: 30.50, nb: 42, esp: 120.50, cb: 330.00, chq: 0, marge: 180.00, byArt: { 'Pain bâtard': { qty: 20, ttc: 36, ht: 34, marge: 12 } }, hist: [] },
+        { date: '18/04/2026', rec: 512.00, ht: 480.00, tvaCol: 32.00, nb: 55, esp: 200.00, cb: 312.00, chq: 0, marge: 210.00, byArt: { 'Croissant': { qty: 45, ttc: 54, ht: 51, marge: 25 } }, hist: [] }
+    ],
     cmds: [],
-    nid: 20,
+    nid: 30,
 };
 
 // PERSISTANCE localStorage
@@ -690,5 +693,5 @@ function cm(id) { document.getElementById(id).style.display = 'none'; }
 function suc(tt, sb) { document.getElementById('suc-tt').textContent = tt; document.getElementById('suc-sb').textContent = sb; document.getElementById('m-suc').style.display = 'flex'; }
 
 function toggleSidebar() {
-  document.querySelector(".sidebar").classList.toggle("collapsed");
+    document.querySelector(".sidebar").classList.toggle("collapsed");
 }
