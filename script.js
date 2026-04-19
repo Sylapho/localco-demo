@@ -695,3 +695,107 @@ function suc(tt, sb) { document.getElementById('suc-tt').textContent = tt; docum
 function toggleSidebar() {
     document.querySelector(".sidebar").classList.toggle("collapsed");
 }
+function filterMerchantArticles() {
+    const query = document.getElementById('art-search').value.toLowerCase();
+    const statusFilter = document.getElementById('filter-status').value;
+    const sortFilter = document.getElementById('filter-sort').value;
+
+    // Utilisation de DEFAULT au lieu de data
+    let filtered = [...DEFAULT.arts];
+
+    // 1. Filtrage
+    if (query) {
+        filtered = filtered.filter(a => 
+            a.nom.toLowerCase().includes(query) || a.desc.toLowerCase().includes(query)
+        );
+    }
+    if (statusFilter !== 'all') {
+        if (statusFilter === 'online') filtered = filtered.filter(a => a.online);
+        if (statusFilter === 'offline') filtered = filtered.filter(a => !a.online);
+    }
+
+    // 2. Fonction utilitaire pour calculer la marge d'un article
+    const getMarge = (art) => {
+        let coutMP = 0;
+        if (art.nomen) {
+            art.nomen.forEach(item => {
+                const mp = DEFAULT.mps.find(m => m.id === item.mpId);
+                if (mp) coutMP += mp.cout * item.qte;
+            });
+        }
+        return art.prix - coutMP;
+    };
+
+    // 3. Tri (incluant la marge)
+    filtered.sort((a, b) => {
+        if (sortFilter === 'nom') return a.nom.localeCompare(b.nom);
+        if (sortFilter === 'prix-asc') return a.prix - b.prix;
+        if (sortFilter === 'prix-desc') return b.prix - a.prix;
+        if (sortFilter === 'stock-desc') return b.qty - a.qty;
+        if (sortFilter === 'marge-desc') return getMarge(b) - getMarge(a); // Tri par marge décroissante
+        return 0;
+    });
+
+    renderMerchantArticles(filtered);
+}
+
+function renderMerchantArticles(list) {
+    const container = document.getElementById('art-cards');
+    if (!container) return;
+
+    container.innerHTML = list.map(art => {
+        const tvaTaux = art.tva || 0.055;
+        const prixHT = art.prix / (1 + tvaTaux);
+        
+        let coutMP = 0;
+        let detailMP = "";
+        
+        if (art.nomen) {
+            detailMP = art.nomen.map(item => {
+                const mp = DEFAULT.mps.find(m => m.id === item.mpId);
+                if (mp) {
+                    coutMP += mp.cout * item.qte;
+                    return `${mp.nom} ×${item.qte}${mp.u}`;
+                }
+                return "";
+            }).filter(s => s !== "").join(', ');
+        }
+
+        const marge = art.prix - coutMP;
+
+        return `
+        <div class="card art-item">
+            <div class="art-top-row">
+                <span class="art-emoji">${art.e}</span>
+                <span class="stock-badge-green">${art.qty} U</span>
+            </div>
+
+            <h3 class="art-title">${art.nom}</h3>
+            <p class="art-desc">${art.desc}</p>
+
+            <div class="art-price-section">
+                <div class="art-main-price">${art.prix.toFixed(2)} €</div>
+                <div class="art-sub-price">HT : ${prixHT.toFixed(2)}€ · TVA ${(tvaTaux * 100).toFixed(1)}%</div>
+            </div>
+
+            <div class="art-margin-section">
+                <strong>Coût MP : ${coutMP.toFixed(2)} €</strong> · <span class="txt-green">Marge : ${marge.toFixed(2)} €</span>
+            </div>
+
+            <div class="art-mp-details">
+                MP: ${detailMP || "Aucune nomenclature"}
+            </div>
+
+            <div class="art-status-row">
+                <span class="badge-online-light">${art.online ? 'EN LIGNE' : 'HORS LIGNE'}</span>
+            </div>
+
+            <div class="art-actions">
+                <button class="btn-action" onclick="openEdit(${art.id})">➖ Modifier</button>
+                <button class="btn-action" onclick="openNomen(${art.id})">⚖️ Nomenclature</button>
+                <button class="btn-action" onclick="openPerte(${art.id})">📋 Perte</button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
