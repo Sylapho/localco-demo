@@ -82,6 +82,7 @@ const fmtN = v => parseFloat(v).toFixed(2).replace('.', ',');
 const today = () => new Date().toLocaleDateString('fr', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const sdot = m => { const p = m.stock / (m.seuil * 3.33) * 100; return p >= 100 ? '#1a6b3c' : p >= 50 ? '#c17d0a' : '#c0392b'; };
 const sbadge = m => { const p = m.stock / (m.seuil * 3.33) * 100; return p >= 100 ? '<span class="badge bg">OK</span>' : p >= 50 ? '<span class="badge bo">Moyen</span>' : '<span class="badge br">Critique</span>'; };
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // Calcul coût MP d'un article
 function coutMP(art) {
@@ -122,8 +123,8 @@ function renderShop() {
         return `<div class="shop-card ${a.qty === 0 ? 'out-stock' : ''}">
       <div class="sc-img">${a.e}</div>
       <div class="sc-body">
-        <div class="sc-name">${a.nom}</div>
-        <div class="sc-desc">${a.desc}</div>
+        <div class="sc-name">${esc(a.nom)}</div>
+        <div class="sc-desc">${esc(a.desc)}</div>
         <div class="sc-foot">
           <div class="sc-price">${fmt(a.prix)}<small>TTC · TVA ${(a.tva * 100).toFixed(1)}%</small></div>
           ${a.qty === 0 ? '<span class="stock-warn">Épuisé</span>' :
@@ -160,7 +161,7 @@ function updCart() {
     el.innerHTML = entries.map(([id, q]) => {
         const a = S.arts.find(x => x.id == id); if (!a) return '';
         return `<div class="cart-item">
-      <div class="ci-info"><div class="ci-name">${a.e} ${a.nom}</div><div class="ci-price">${fmt(a.prix)} × ${q}</div></div>
+      <div class="ci-info"><div class="ci-name">${esc(a.e)} ${esc(a.nom)}</div><div class="ci-price">${fmt(a.prix)} × ${q}</div></div>
       <div class="qc" style="margin:0 6px"><button class="qb" onclick="chCart(${id},-1)">−</button><span class="qv">${q}</span><button class="qb" onclick="chCart(${id},1)">+</button></div>
       <span class="ci-total">${fmt(a.prix * q)}</span></div>`;
     }).join('');
@@ -269,7 +270,7 @@ function renderCaisse() {
     g.innerHTML = S.arts.map(a => {
         const ht = (a.prix / (1 + a.tva));
         return `<button class="art-btn ${S.panier.find(p => p.id === a.id) ? 'sel' : ''}" onclick="addPan(${a.id})" ${a.qty === 0 ? 'disabled' : ''}>
-      <span class="a-name">${a.e} ${a.nom}</span>
+      <span class="a-name">${esc(a.e)} ${esc(a.nom)}</span>
       <span class="a-price">${fmt(a.prix)}</span>
       <span class="a-tva">HT: ${fmtN(ht)}€ · TVA ${(a.tva * 100).toFixed(1)}%</span>
       <span class="a-stock">Stock: ${a.qty}</span>
@@ -298,7 +299,7 @@ function renderPan() {
     else {
         e.style.display = 'none';
         l.innerHTML = S.panier.map(p => `<div class="p-item">
-      <span class="p-name">${p.e} ${p.nom}</span>
+      <span class="p-name">${esc(p.e)} ${esc(p.nom)}</span>
       <div class="qc"><button class="qb" onclick="chPan(${p.id},-1)">−</button><span class="qv">${p.qty}</span><button class="qb" onclick="chPan(${p.id},1)">+</button></div>
       <span class="p-price">${fmt(p.prix * p.qty)}</span></div>`).join('');
     }
@@ -366,7 +367,7 @@ function mkTicket(t) {
     <div class="tk-t">🥖 BOULANGERIE MAXIME</div>
     <div class="tk-l"><span>${today()}</span><span>${t.h}</span></div>
     <div class="tk-s"></div>
-    ${t.arts.map(a => `<div class="tk-l"><span>${a.e} ${a.nom} ×${a.qty}</span><span>${fmt(a.prix * a.qty)}</span></div>`).join('')}
+    ${t.arts.map(a => `<div class="tk-l"><span>${esc(a.e)} ${esc(a.nom)} ×${a.qty}</span><span>${fmt(a.prix * a.qty)}</span></div>`).join('')}
     <div class="tk-s"></div>
     ${t.rem > 0 ? `<div class="tk-l"><span>Remise ${t.rem}%</span><span style="color:var(--red)">−${fmt(t.arts.reduce((s, a) => s + a.prix * a.qty, 0) * t.rem / 100)}</span></div>` : ''}
     <div class="tk-l"><span>HT</span><span>${fmt(t.ht)}</span></div>
@@ -387,12 +388,12 @@ function renderCmds() {
     if (!pending.length) { el.innerHTML = '<div style="color:var(--text2);font-size:14px;padding:32px;text-align:center">✓ Aucune commande en attente</div>'; return; }
     el.innerHTML = pending.map(c => `<div class="cmd-card ${c.statut === 'nouvelle' ? 'new' : ''}">
     <div class="cmd-hd">
-      <div><div class="cmd-nm">${c.nom}${c.statut === 'nouvelle' ? '<span class="ndot"></span>' : ''}</div>
-      <div class="cmd-mt">📧 ${c.email} · 📞 ${c.tel || '—'}</div></div>
+      <div><div class="cmd-nm">${esc(c.nom)}${c.statut === 'nouvelle' ? '<span class="ndot"></span>' : ''}</div>
+      <div class="cmd-mt">📧 ${esc(c.email)} · 📞 ${esc(c.tel || '—')}</div></div>
       <span class="badge ${c.statut === 'nouvelle' ? 'bb' : 'bo'}">${c.statut === 'nouvelle' ? 'Nouvelle' : 'En attente'}</span>
     </div>
-    <div class="cmd-arts">${c.arts.map(a => `${a.e} ${a.nom} ×${a.qty}`).join(' · ')}</div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:9px">📍 ${c.lieu} · 🗓 ${c.date}</div>
+    <div class="cmd-arts">${c.arts.map(a => `${esc(a.e)} ${esc(a.nom)} ×${a.qty}`).join(' · ')}</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:9px">📍 ${esc(c.lieu)} · 🗓 ${esc(c.date)}</div>
     <div class="cmd-ft">
       <div class="cmd-tot">${fmt(c.tot)}</div>
       <div style="display:flex;gap:6px">
@@ -436,12 +437,12 @@ function annulerCmd(id) {
 // ══════════════════════════════════════════
 function renderStock() {
     document.getElementById('mp-tbody').innerHTML = S.mps.map(m => `<tr>
-    <td><span class="dot" style="background:${sdot(m)}"></span>${m.nom}</td>
-    <td><strong>${m.stock} ${m.u}</strong></td><td>${m.cond}</td>
+    <td><span class="dot" style="background:${sdot(m)}"></span>${esc(m.nom)}</td>
+    <td><strong>${m.stock} ${esc(m.u)}</strong></td><td>${esc(m.cond)}</td>
     <td>${fmt(m.cout)}</td><td>${fmt(m.cout * m.stock)}</td><td>${sbadge(m)}</td></tr>`).join('');
     document.getElementById('mp-cards').innerHTML = S.mps.map(m => `<div class="mob-card">
-    <div class="mc-row"><span style="font-weight:700;font-size:14px"><span class="dot" style="background:${sdot(m)}"></span>${m.nom}</span>${sbadge(m)}</div>
-    <div class="mc-row"><span class="mc-label">Stock</span><span class="mc-val">${m.stock} ${m.u}</span></div>
+    <div class="mc-row"><span style="font-weight:700;font-size:14px"><span class="dot" style="background:${sdot(m)}"></span>${esc(m.nom)}</span>${sbadge(m)}</div>
+    <div class="mc-row"><span class="mc-label">Stock</span><span class="mc-val">${m.stock} ${esc(m.u)}</span></div>
     <div class="mc-row"><span class="mc-label">Coût unit.</span><span class="mc-val">${fmt(m.cout)}</span></div>
     <div class="mc-row"><span class="mc-label">Valeur stock</span><span class="mc-val" style="font-weight:700;color:var(--green)">${fmt(m.cout * m.stock)}</span></div>
   </div>`).join('');
@@ -451,11 +452,11 @@ function renderStock() {
     document.getElementById('cnt-o').textContent = S.mps.filter(m => { const p = m.stock / (m.seuil * 3.33) * 100; return p >= 50 && p < 100; }).length;
     document.getElementById('cnt-r').textContent = S.mps.filter(m => m.stock / (m.seuil * 3.33) * 100 < 50).length;
     const al = document.getElementById('st-alerts');
-    al.innerHTML = S.mps.filter(m => m.stock < m.seuil).map(m => `<div class="alert-b ${m.stock < m.seuil * 0.3 ? 'alert-r' : 'alert-o'}">⚠ <strong>${m.nom}</strong> — ${m.stock} ${m.u} restants</div>`).join('');
+    al.innerHTML = S.mps.filter(m => m.stock < m.seuil).map(m => `<div class="alert-b ${m.stock < m.seuil * 0.3 ? 'alert-r' : 'alert-o'}">⚠ <strong>${esc(m.nom)}</strong> — ${m.stock} ${esc(m.u)} restants</div>`).join('');
 
     document.getElementById('as-tbody').innerHTML = S.arts.map(a => {
         const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout; const pct = cout > 0 ? (marge / htPrix * 100) : null;
-        return `<tr><td>${a.e} ${a.nom}</td><td><strong>${a.qty} u</strong></td><td>${fmt(a.prix)}</td>
+        return `<tr><td>${esc(a.e)} ${esc(a.nom)}</td><td><strong>${a.qty} u</strong></td><td>${fmt(a.prix)}</td>
       <td>${fmt(cout)}</td>
       <td class="${marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(marge)}${pct !== null ? ` (${pct.toFixed(0)}%)` : ''}${!a.nomen || !a.nomen.length ? '<br><small style="color:var(--amber)">Nomenclature manquante</small>' : ''}</td>
       <td><span class="badge ${a.qty > 10 ? 'bg' : a.qty > 2 ? 'bo' : 'br'}">${a.qty > 10 ? 'OK' : a.qty > 2 ? 'Moyen' : 'Critique'}</span></td></tr>`;
@@ -463,13 +464,13 @@ function renderStock() {
     document.getElementById('as-cards').innerHTML = S.arts.map(a => {
         const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout;
         return `<div class="mob-card">
-      <div class="mc-row"><span style="font-weight:700;font-size:14px">${a.e} ${a.nom}</span><span class="badge ${a.qty > 10 ? 'bg' : a.qty > 2 ? 'bo' : 'br'}">${a.qty} u</span></div>
+      <div class="mc-row"><span style="font-weight:700;font-size:14px">${esc(a.e)} ${esc(a.nom)}</span><span class="badge ${a.qty > 10 ? 'bg' : a.qty > 2 ? 'bo' : 'br'}">${a.qty} u</span></div>
       <div class="mc-row"><span class="mc-label">Prix TTC</span><span class="mc-val">${fmt(a.prix)}</span></div>
       <div class="mc-row"><span class="mc-label">Coût MP</span><span class="mc-val">${fmt(cout)}</span></div>
       <div class="mc-row"><span class="mc-label">Marge HT</span><span class="mc-val ${marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(marge)}</span></div>
     </div>`;
     }).join('');
-    document.getElementById('r-mp').innerHTML = S.mps.map(m => `<option value="${m.id}">${m.nom}</option>`).join('');
+    document.getElementById('r-mp').innerHTML = S.mps.map(m => `<option value="${m.id}">${esc(m.nom)}</option>`).join('');
 }
 function openReappro() { renderStock(); document.getElementById('m-reappro').style.display = 'flex'; }
 function saveReappro() {
@@ -486,16 +487,16 @@ function renderArtCards() {
     document.getElementById('art-cards').innerHTML = S.arts.map(a => {
         const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout;
         return `<div class="card" style="margin-bottom:0">
-      <div style="font-size:28px;margin-bottom:7px">${a.e}</div>
+      <div style="font-size:28px;margin-bottom:7px">${esc(a.e)}</div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
-        <div style="font-size:14px;font-weight:700">${a.nom}</div>
+        <div style="font-size:14px;font-weight:700">${esc(a.nom)}</div>
         <span class="badge ${a.qty > 10 ? 'bg' : a.qty > 0 ? 'bo' : 'br'}">${a.qty} u</span>
       </div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4">${a.desc}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.4">${esc(a.desc)}</div>
       <div style="font-size:16px;font-weight:700;color:var(--green);margin-bottom:2px">${fmt(a.prix)}</div>
       <div style="font-size:11px;color:var(--text2);margin-bottom:5px">HT : ${fmtN(a.prix / (1 + a.tva))}€ · TVA ${(a.tva * 100).toFixed(1)}%</div>
       <div style="font-size:12px;margin-bottom:4px">Coût MP : ${fmt(cout)} · <span class="${marge >= 0 ? 'marge-pos' : 'marge-neg'}">Marge : ${fmt(marge)}</span></div>
-      ${!a.nomen || !a.nomen.length ? '<div style="font-size:11px;color:var(--amber);margin-bottom:6px">⚠ Nomenclature non définie</div>' : '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">MP: ' + a.nomen.map(n => { const m = S.mps.find(x => x.id === n.mpId); return m ? `${m.nom} ×${n.qte}${m.u}` : '' }).filter(Boolean).join(', ') + '</div>'}
+      ${!a.nomen || !a.nomen.length ? '<div style="font-size:11px;color:var(--amber);margin-bottom:6px">⚠ Nomenclature non définie</div>' : '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">MP: ' + a.nomen.map(n => { const m = S.mps.find(x => x.id === n.mpId); return m ? `${esc(m.nom)} ×${n.qte}${esc(m.u)}` : '' }).filter(Boolean).join(', ') + '</div>'}
       <div style="margin-bottom:8px"><span class="badge ${a.online ? 'bg' : 'bo'}">${a.online ? 'En ligne' : 'Boutique seule'}</span></div>
       <div class="btn-row">
         <button class="btn btn-o" style="flex:1;font-size:12px;padding:7px" onclick="editArt(${a.id})">✏ Modifier</button>
@@ -545,9 +546,9 @@ function openNomen(artId) {
     rows.innerHTML = S.mps.map(m => {
         const existing = a.nomen && a.nomen.find(n => n.mpId === m.id);
         return `<div class="nomen-row">
-      <span class="nomen-mp">${m.nom}</span>
+      <span class="nomen-mp">${esc(m.nom)}</span>
       <input class="nomen-qty" type="number" step="0.001" min="0" placeholder="0" data-mpid="${m.id}" value="${existing ? existing.qte : ''}"/>
-      <span class="nomen-unit">${m.u}</span>
+      <span class="nomen-unit">${esc(m.u)}</span>
     </div>`;
     }).join('');
     document.getElementById('m-nomen').style.display = 'flex';
@@ -564,7 +565,7 @@ function saveNomen() {
 }
 
 function openPerte(preId) {
-    document.getElementById('p-art').innerHTML = S.arts.map(a => `<option value="${a.id}" ${a.id === preId ? 'selected' : ''}>${a.nom}</option>`).join('');
+    document.getElementById('p-art').innerHTML = S.arts.map(a => `<option value="${a.id}" ${a.id === preId ? 'selected' : ''}>${esc(a.nom)}</option>`).join('');
     document.getElementById('p-qty').value = ''; document.getElementById('p-mot').value = '';
     document.getElementById('m-perte').style.display = 'flex';
 }
@@ -592,14 +593,14 @@ function renderSuivi() {
     document.getElementById('sv-tbody').innerHTML = !entries.length
         ? '<tr><td colspan="4" style="color:var(--text2);text-align:center;padding:14px">Aucune vente</td></tr>'
         : entries.sort((a, b) => b[1].ttc - a[1].ttc).map(([n, v]) => `<tr>
-      <td>${n}</td><td>${v.qty}</td><td class="tc">${fmt(v.ttc)}</td>
+      <td>${esc(n)}</td><td>${v.qty}</td><td class="tc">${fmt(v.ttc)}</td>
       <td class="${v.marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(v.marge)}</td></tr>`).join('');
     document.getElementById('sv-hist').innerHTML = !S.suivi.hist.length
         ? '<div style="color:var(--text2);font-size:13px;padding:8px 0">Aucune transaction</div>'
         : S.suivi.hist.slice(0, 20).map(t => `<div class="h-item">
       <div class="h-dot"></div>
-      <div class="h-info"><div class="h-art">${t.arts.map(a => a.nom).join(', ')}</div>
-      <div class="h-meta">${t.h} · ${t.mode} · HT:${fmt(t.ht)}</div></div>
+      <div class="h-info"><div class="h-art">${t.arts.map(a => esc(a.nom)).join(', ')}</div>
+      <div class="h-meta">${t.h} · ${esc(t.mode)} · HT:${fmt(t.ht)}</div></div>
       <div class="h-amt">${fmt(t.ttc)}</div></div>`).join('');
 }
 
@@ -633,7 +634,7 @@ function renderCloture() {
         <div><div style="font-size:11px;color:var(--text2)">Chèques</div><div style="font-weight:700">${fmt(j.chq)}</div></div>
       </div>
       ${j.byArt && Object.keys(j.byArt).length ? `<table class="s-tbl"><thead><tr><th>Article</th><th>Qté</th><th>CA TTC</th><th>Marge</th></tr></thead><tbody>
-        ${Object.entries(j.byArt).map(([n, v]) => `<tr><td>${n}</td><td>${v.qty}</td><td>${fmt(v.ttc)}</td><td class="${v.marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(v.marge)}</td></tr>`).join('')}
+        ${Object.entries(j.byArt).map(([n, v]) => `<tr><td>${esc(n)}</td><td>${v.qty}</td><td>${fmt(v.ttc)}</td><td class="${v.marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(v.marge)}</td></tr>`).join('')}
       </tbody></table>`: ''}
     </div>
   </div>`).join('');
@@ -667,13 +668,13 @@ function exportCSV() {
 // ══════════════════════════════════════════
 function renderUsers() {
     document.getElementById('u-tbody').innerHTML = S.users.map(u => `<tr>
-    <td><strong>${u.nom}</strong></td><td><span class="badge bg">${u.role}</span></td>
-    <td>${u.email}</td><td>${u.acces}</td>
+    <td><strong>${esc(u.nom)}</strong></td><td><span class="badge bg">${esc(u.role)}</span></td>
+    <td>${esc(u.email)}</td><td>${esc(u.acces)}</td>
     <td><button class="btn btn-o" style="font-size:12px;padding:5px 9px" onclick="delUser(${u.id})">Supprimer</button></td></tr>`).join('');
     document.getElementById('u-cards').innerHTML = S.users.map(u => `<div class="mob-card">
-    <div class="mc-row"><span style="font-weight:700;font-size:14px">${u.nom}</span><span class="badge bg">${u.role}</span></div>
-    <div class="mc-row"><span class="mc-label">Email</span><span class="mc-val">${u.email}</span></div>
-    <div class="mc-row"><span class="mc-label">Accès</span><span class="mc-val">${u.acces}</span></div>
+    <div class="mc-row"><span style="font-weight:700;font-size:14px">${esc(u.nom)}</span><span class="badge bg">${esc(u.role)}</span></div>
+    <div class="mc-row"><span class="mc-label">Email</span><span class="mc-val">${esc(u.email)}</span></div>
+    <div class="mc-row"><span class="mc-label">Accès</span><span class="mc-val">${esc(u.acces)}</span></div>
     <div style="margin-top:8px"><button class="btn btn-o" style="font-size:12px;padding:7px 12px" onclick="delUser(${u.id})">Supprimer</button></div>
   </div>`).join('');
 }
@@ -743,7 +744,7 @@ function renderMerchantArticles(list) {
     const container = document.getElementById('art-cards');
     if (!container) return;
 
-    // On utilise DEFAULT pour les calculs de MP
+    // On utilise S pour les calculs de MP
     container.innerHTML = list.map(art => {
         // --- CALCULS ---
         const tvaTaux = art.tva || 0.055;
@@ -753,26 +754,26 @@ function renderMerchantArticles(list) {
         let detailMP = "";
         if (art.nomen) {
             detailMP = art.nomen.map(item => {
-                const mp = DEFAULT.mps.find(m => m.id === item.mpId);
+                const mp = S.mps.find(m => m.id === item.mpId);
                 if (mp) {
                     coutMP += mp.cout * item.qte;
-                    return `${mp.nom} ×${item.qte}${mp.u}`;
+                    return `${esc(mp.nom)} ×${item.qte}${esc(mp.u)}`;
                 }
                 return "";
             }).filter(s => s !== "").join(', ');
         }
         const marge = art.prix - coutMP;
 
-        // --- STRUCTURE HTML RÉUTILISANT TON CSS ---
+        // --- STRUCTURE HTML ---
         return `
         <div class="card art-item">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
-                <span style="font-size:32px">${art.e}</span>
+                <span style="font-size:32px">${esc(art.e)}</span>
                 <span class="badge bg" style="font-size:12px">${art.qty} U</span>
             </div>
 
-            <h3 style="margin:0; font-size:16px">${art.nom}</h3>
-            <p style="color:var(--text2); font-size:13px; margin:2px 0 10px 0">${art.desc}</p>
+            <h3 style="margin:0; font-size:16px">${esc(art.nom)}</h3>
+            <p style="color:var(--text2); font-size:13px; margin:2px 0 10px 0">${esc(art.desc)}</p>
 
             <div style="margin-bottom:12px">
                 <div style="font-size:20px; font-weight:700; color:var(--green)">${art.prix.toFixed(2)} €</div>
