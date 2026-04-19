@@ -37,7 +37,7 @@
       <header class="shop-topbar">
         <div style="min-width:0;flex:1">
           <div class="shop-logo">LOCAL <span>CO</span></div>
-          <div class="shop-sub">Boulangerie  · Commande en ligne</div>
+          <div class="shop-sub">Boulangerie · Commande en ligne</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
           <button class="cbtn" onclick="go('switcher')" style="font-size:12px;padding:7px 10px">← Accueil</button>
@@ -68,7 +68,7 @@
         <div class="email-recap" id="c-recap"></div>
         <div class="rgpd-note">🔒 <strong>Données personnelles (RGPD)</strong> — Vos informations sont utilisées
           uniquement pour le traitement de cette commande. Elles ne sont pas transmises à des tiers. Conformément au
-          RGPD, vous disposez d'un droit d'accès, de rectification et de suppression. Contact : 
+          RGPD, vous disposez d'un droit d'accès, de rectification et de suppression. Contact :
 
         </div>
         <div style="margin-top:16px;text-align:center"><button class="btn btn-g" onclick="resetClient()">Passer une
@@ -476,6 +476,13 @@
           <path
             d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
         </svg>Stock</button>
+      <button class="bn-it" data-s="articles" onclick="showS('articles',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+          <rect x="9" y="3" width="6" height="4" rx="1" />
+        </svg>
+        Articles
+      </button>
       <button class="bn-it" data-s="suivi" onclick="showS('suivi',this)"><svg viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2">
           <line x1="18" y1="20" x2="18" y2="10" />
