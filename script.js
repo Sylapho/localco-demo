@@ -688,3 +688,7 @@ function delUser(id) { if (!confirm('Supprimer ?')) return; S.users = S.users.fi
 // UTILS
 function cm(id) { document.getElementById(id).style.display = 'none'; }
 function suc(tt, sb) { document.getElementById('suc-tt').textContent = tt; document.getElementById('suc-sb').textContent = sb; document.getElementById('m-suc').style.display = 'flex'; }
+
+function toggleSidebar() {
+  document.querySelector(".sidebar").classList.toggle("collapsed");
+}

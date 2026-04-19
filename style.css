@@ -2320,3 +2320,52 @@ body {
   /* Désactiver le mode sombre pour le moment (commenter pour l'activer) */
   /* Retirer ce bloc si vous ne voulez pas le dark mode automatique */
 /* } 
+
+/* bouton toggle */
+.collapse-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+/* sidebar réduite */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+/* cacher le texte */
+.sidebar.collapsed .nav-it span,
+.sidebar.collapsed .s-logo p,
+.sidebar.collapsed .u-info {
+  display: none;
+}
+
+/* centrer les icônes */
+.sidebar.collapsed .nav-it {
+  justify-content: center;
+}
+
+/* contenu prend toute la place */
+.sidebar.collapsed + .m-main {
+  width: 100%;
+}
+
+/* transition smooth */
+.sidebar {
+  transition: width 0.25s ease;
+}
+
+.sidebar.collapsed .nav-it:hover::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 70px;
+  background: #000;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
