@@ -701,11 +701,11 @@ function filterMerchantArticles() {
     const sortFilter = document.getElementById('filter-sort').value;
 
     // Utilisation de DEFAULT au lieu de data
-    let filtered = [...DEFAULT.arts];
+    let filtered = [...S.arts];
 
     // 1. Filtrage
     if (query) {
-        filtered = filtered.filter(a => 
+        filtered = filtered.filter(a =>
             a.nom.toLowerCase().includes(query) || a.desc.toLowerCase().includes(query)
         );
     }
@@ -719,7 +719,7 @@ function filterMerchantArticles() {
         let coutMP = 0;
         if (art.nomen) {
             art.nomen.forEach(item => {
-                const mp = DEFAULT.mps.find(m => m.id === item.mpId);
+                const mp = S.mps.find(m => m.id === item.mpId);
                 if (mp) coutMP += mp.cout * item.qte;
             });
         }
@@ -743,13 +743,14 @@ function renderMerchantArticles(list) {
     const container = document.getElementById('art-cards');
     if (!container) return;
 
+    // On utilise DEFAULT pour les calculs de MP
     container.innerHTML = list.map(art => {
+        // --- CALCULS ---
         const tvaTaux = art.tva || 0.055;
         const prixHT = art.prix / (1 + tvaTaux);
-        
+
         let coutMP = 0;
         let detailMP = "";
-        
         if (art.nomen) {
             detailMP = art.nomen.map(item => {
                 const mp = DEFAULT.mps.find(m => m.id === item.mpId);
@@ -760,40 +761,45 @@ function renderMerchantArticles(list) {
                 return "";
             }).filter(s => s !== "").join(', ');
         }
-
         const marge = art.prix - coutMP;
 
+        // --- STRUCTURE HTML RÉUTILISANT TON CSS ---
         return `
         <div class="card art-item">
-            <div class="art-top-row">
-                <span class="art-emoji">${art.e}</span>
-                <span class="stock-badge-green">${art.qty} U</span>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px">
+                <span style="font-size:32px">${art.e}</span>
+                <span class="badge bg" style="font-size:12px">${art.qty} U</span>
             </div>
 
-            <h3 class="art-title">${art.nom}</h3>
-            <p class="art-desc">${art.desc}</p>
+            <h3 style="margin:0; font-size:16px">${art.nom}</h3>
+            <p style="color:var(--text2); font-size:13px; margin:2px 0 10px 0">${art.desc}</p>
 
-            <div class="art-price-section">
-                <div class="art-main-price">${art.prix.toFixed(2)} €</div>
-                <div class="art-sub-price">HT : ${prixHT.toFixed(2)}€ · TVA ${(tvaTaux * 100).toFixed(1)}%</div>
+            <div style="margin-bottom:12px">
+                <div style="font-size:20px; font-weight:700; color:var(--green)">${art.prix.toFixed(2)} €</div>
+                <div style="font-size:11px; color:var(--text2)">
+                    HT : ${prixHT.toFixed(2)}€ · TVA ${(tvaTaux * 100).toFixed(1)}%
+                </div>
             </div>
 
-            <div class="art-margin-section">
-                <strong>Coût MP : ${coutMP.toFixed(2)} €</strong> · <span class="txt-green">Marge : ${marge.toFixed(2)} €</span>
+            <div style="font-size:13px; margin-bottom:4px">
+                Coût MP : <b>${coutMP.toFixed(2)} €</b> · 
+                <span class="marge-pos">Marge : ${marge.toFixed(2)} €</span>
             </div>
 
-            <div class="art-mp-details">
+            <div style="font-size:11px; color:var(--text2); margin-bottom:12px; line-height:1.4">
                 MP: ${detailMP || "Aucune nomenclature"}
             </div>
 
-            <div class="art-status-row">
-                <span class="badge-online-light">${art.online ? 'EN LIGNE' : 'HORS LIGNE'}</span>
+            <div style="margin-bottom:12px">
+                <span class="badge ${art.online ? 'bg' : 'bo'}" style="font-size:10px">
+                    ${art.online ? 'EN LIGNE' : 'HORS LIGNE'}
+                </span>
             </div>
 
-            <div class="art-actions">
-                <button class="btn-action" onclick="openEdit(${art.id})">➖ Modifier</button>
-                <button class="btn-action" onclick="openNomen(${art.id})">⚖️ Nomenclature</button>
-                <button class="btn-action" onclick="openPerte(${art.id})">📋 Perte</button>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px">
+                <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="openEdit(${art.id})">➖ Modifier</button>
+                <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="openNomen(${art.id})">⚖️ Nomen.</button>
+                <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="openPerte(${art.id})">📋 Perte</button>
             </div>
         </div>
         `;
