@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>LOCAL CO</title>
+  <title>Les Cocottes de Diane</title>
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
@@ -15,13 +15,14 @@
 
   <!-- SWITCHER -->
   <div id="view-switcher" class="view active">
-    <h1>LOCAL <span>CO</span></h1>
-    <p>Plateforme de gestion et de vente pour les commerçants de proximité</p>
+    <h1>Les <span>Cocottes de Diane</span></h1>
+    <img src="LOGO.svg" alt="Logo Les Cocottes de Diane" style="height: 240px; margin-bottom: 20px;">
+    <!-- <p>Plateforme de gestion et de vente pour les commerçants de proximité</p> -->
     <div class="sw-cards">
       <div class="sw-card" onclick="go('client')">
         <div class="icon">🛍️</div>
         <h2>Espace client</h2>
-        <p>Commander en ligne auprès de la boulangerie</p>
+        <p>Commander en ligne auprès des Cocottes de Diane</p>
       </div>
       <div class="sw-card" onclick="go('merchant')">
         <div class="icon">🏪</div>
@@ -36,8 +37,8 @@
     <div id="c-shop">
       <header class="shop-topbar">
         <div style="min-width:0;flex:1">
-          <div class="shop-logo">LOCAL <span>CO</span></div>
-          <div class="shop-sub">Boulangerie · Commande en ligne</div>
+          <div class="shop-logo">Les Cocottes de <span>Diane</span></div>
+          <div class="shop-sub">Les Cocottes de Diane · Commande en ligne</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
           <button class="cbtn" onclick="go('switcher')" style="font-size:12px;padding:7px 10px">← Accueil</button>
@@ -49,7 +50,7 @@
           <div class="hero-icon">🥖</div>
           <div>
             <h2>Commandez en avance</h2>
-            <p>Retrait en boutique ou sur nos marchés · Paiement au retrait</p>
+            <p>Retrait en boutique ou sur nos marchés</p>
           </div>
         </div>
         <div class="shop-grid" id="shop-grid"></div>
@@ -57,7 +58,7 @@
     </div>
     <div id="c-confirm" style="display:none">
       <header class="shop-topbar">
-        <div class="shop-logo">LOCAL <span>CO</span></div>
+        <div class="shop-logo">Les Cocottes de <span>Diane</span></div>
         <button class="cbtn" onclick="go('switcher')" style="font-size:12px">← Accueil</button>
       </header>
       <div class="confirm-screen">
@@ -66,10 +67,10 @@
         <p style="text-align:center;color:var(--text2);font-size:13px;margin-bottom:4px">Récapitulatif de votre commande
           :</p>
         <div class="email-recap" id="c-recap"></div>
-        <div class="rgpd-note">🔒 <strong>Données personnelles (RGPD)</strong> — Vos informations sont utilisées
-          uniquement pour le traitement de cette commande. Elles ne sont pas transmises à des tiers. Conformément au
-          RGPD, vous disposez d'un droit d'accès, de rectification et de suppression. Contact :
-
+        <div class="rgpd-note">
+          <strong>Données personnelles (RGPD)</strong> — Vos informations sont utilisées uniquement pour le
+          traitement de cette commande. Elles ne sont pas transmises à des tiers. Conformément au RGPD, vous disposez
+          d’un droit d’accès, de rectification et de suppression. Contact : 
         </div>
         <div style="margin-top:16px;text-align:center"><button class="btn btn-g" onclick="resetClient()">Passer une
             nouvelle commande</button></div>
@@ -83,20 +84,46 @@
         <div class="cp-empty">Votre panier est vide</div>
       </div>
       <div class="cp-foot">
-        <div class="total-row"><span class="total-lbl">Total TTC</span><span class="total-val" id="c-total">0,00
-            €</span></div>
+        <div class="total-row">
+          <span class="total-lbl">Total TTC</span>
+          <span class="total-val" id="c-total">0,00 €</span>
+        </div>
+
+        <div class="pay-notice">
+          Retrait sur place ou marché · confirmation immédiate
+        </div>
+
         <div class="stock-error" id="c-stock-err"></div>
-        <div class="cfield"><label>Nom / Prénom *</label><input type="text" id="cl-nom" placeholder="Marie Dupont" />
+
+        <div class="cfield">
+          <label for="cl-nom">Nom / Prénom *</label>
+          <input type="text" id="cl-nom" placeholder="Marie Dupont" autocomplete="name" />
         </div>
-        <div class="cfield"><label>Email *</label><input type="email" id="cl-email" placeholder="marie@exemple.fr" />
+
+        <div class="cfield">
+          <label for="cl-email">Email *</label>
+          <input type="email" id="cl-email" placeholder="marie@exemple.fr" autocomplete="email" />
         </div>
-        <div class="cfield"><label>Téléphone</label><input type="tel" id="cl-tel" placeholder="06 12 34 56 78" /></div>
-        <div class="cfield"><label>Lieu de retrait</label><select id="cl-lieu">
-            <option>En boutique</option>
-            <option>Marché du samedi matin</option>
-            <option>Marché du dimanche</option>
-          </select></div>
-        <div class="cfield"><label>Date souhaitée</label><input type="date" id="cl-date" /></div>
+
+        <div class="cfield">
+          <label for="cl-tel">Téléphone</label>
+          <input type="tel" id="cl-tel" placeholder="06 12 34 56 78" autocomplete="tel" />
+        </div>
+
+        <div class="cfield">
+          <label for="cl-lieu">Lieu de retrait *</label>
+          <select id="cl-lieu">
+            <option value="En boutique">En boutique</option>
+            <option value="Marché du samedi matin">Marché du samedi matin</option>
+            <option value="Marché du dimanche">Marché du dimanche</option>
+          </select>
+        </div>
+
+        <div class="cfield">
+          <label for="cl-date">Date souhaitée *</label>
+          <input type="date" id="cl-date" />
+        </div>
+
         <button class="btn btn-g" style="width:100%" onclick="passerCommande()">✓ Confirmer ma commande</button>
       </div>
     </div>
@@ -109,8 +136,8 @@
         <button class="collapse-btn" onclick="toggleSidebar()">☰</button>
         <button class="back-btn" onclick="go('switcher')">← Accueil</button>
         <div class="s-logo">
-          <h1>LOCAL <span>CO</span></h1>
-          <p>Boulangerie</p>
+          <h1>Les <span>Cocottes</span></h1>
+          <p>de Diane</p>
         </div>
         <nav class="s-nav">
           <button class="nav-it active" data-s="caisse" onclick="showS('caisse',this)" data-label="Caisse"><svg
@@ -156,12 +183,18 @@
             </svg><span>Utilisateurs</span></button>
         </nav>
         <div class="s-foot">
-          <div class="u-chip">
-            <div class="u-av">MB</div>
+          <div class="u-chip" style="margin-bottom:10px">
+            <div class="u-av" id="cur-u-av">MB</div>
             <div class="u-info">
-              <p>AZELJK</p>
-              <p>Gérant</p>
+              <p id="cur-u-name">Maxime Bernard</p>
+              <p id="cur-u-role">Gérant</p>
             </div>
+          </div>
+
+          <div class="field" style="margin-bottom:0">
+            <select id="current-user-select" onchange="switchCurrentUser(this.value)">
+              <option value="">Choisir un compte</option>
+            </select>
           </div>
         </div>
       </aside>
@@ -231,19 +264,40 @@
 
         <!-- STOCK -->
         <div class="screen" id="sc-stock">
-          <div class="topbar">
-            <div>
-              <div class="pg-title">Stock</div>
-              <div class="pg-sub">Matières premières & articles</div>
-            </div>
+        <div class="topbar">
+          <div>
+            <div class="pg-title">Stock</div>
+            <div class="pg-sub">Matières premières & articles</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-o" style="font-size:12px" onclick="openMP()">+ Matière première</button>
             <button class="btn btn-g" style="font-size:12px" onclick="openReappro()">+ Réappro</button>
           </div>
+        </div>
           <div id="st-alerts"></div>
           <div class="tabs">
             <button class="tab active" onclick="swTab('t-mp',this)">Matières premières</button>
             <button class="tab" onclick="swTab('t-arts',this)">Articles finis</button>
           </div>
           <div id="t-mp">
+            <div class="stock-toolbar">
+              <div class="stock-filters">
+                <select id="mp-filter-status" onchange="renderStock()" title="Filtrer par statut">
+                  <option value="all">Tous les statuts</option>
+                  <option value="ok">✅ OK</option>
+                  <option value="moyen">🟡 Moyen</option>
+                  <option value="critique">🔴 Critique</option>
+                </select>
+                <select id="mp-sort" onchange="renderStock()" title="Trier par">
+                  <option value="nom">Trier : Nom</option>
+                  <option value="stock-asc">Stock ↑</option>
+                  <option value="stock-desc">Stock ↓</option>
+                  <option value="valeur-desc">Valeur ↓</option>
+                  <option value="statut">Statut (Critique en premier)</option>
+                </select>
+              </div>
+              <button class="btn btn-o stock-export-btn" onclick="exportCSV('mp')">⬇ CSV</button>
+            </div>
             <div class="dt-wrap card" style="padding:0;overflow:hidden">
               <div class="tbl-wrap">
                 <table class="dt">
@@ -251,10 +305,12 @@
                     <tr>
                       <th>Matière</th>
                       <th>Stock</th>
+                      <th>Seuil</th>
                       <th>Cond.</th>
                       <th>Coût</th>
                       <th>Valeur</th>
                       <th>Statut</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody id="mp-tbody"></tbody>
@@ -278,6 +334,26 @@
             </div>
           </div>
           <div id="t-arts" style="display:none">
+            <div class="stock-toolbar">
+              <div class="stock-filters">
+                <select id="as-filter-status" onchange="renderStock()" title="Filtrer par statut">
+                  <option value="all">Tous les statuts</option>
+                  <option value="ok">✅ OK</option>
+                  <option value="moyen">🟡 Moyen</option>
+                  <option value="critique">🔴 Critique</option>
+                </select>
+                <select id="as-sort" onchange="renderStock()" title="Trier par">
+                  <option value="nom">Trier : Nom</option>
+                  <option value="stock-asc">Stock ↑</option>
+                  <option value="stock-desc">Stock ↓</option>
+                  <option value="prix-asc">Prix ↑</option>
+                  <option value="prix-desc">Prix ↓</option>
+                  <option value="marge-desc">Marge ↓</option>
+                  <option value="statut">Statut (Critique en premier)</option>
+                </select>
+              </div>
+              <button class="btn btn-o stock-export-btn" onclick="exportCSV('arts')">⬇ CSV</button>
+            </div>
             <div class="dt-wrap card" style="padding:0;overflow:hidden">
               <div class="tbl-wrap">
                 <table class="dt">
@@ -545,10 +621,62 @@
         </select></div>
       <div class="info-box">ℹ Définissez les matières premières utilisées par article via l'onglet <strong>Articles →
           Modifier → Nomenclature</strong> après création.</div>
+      <label>Seuil critique</label>
+      <input type="number" id="a-seuil" min="0" placeholder="Ex: 10" />
       <div class="btn-row"><button class="btn btn-g" style="flex:1" onclick="saveArticle()">Enregistrer</button><button
           class="btn btn-o" onclick="cm('m-article')">Annuler</button></div>
     </div>
   </div>
+
+  <div class="modal-bg" id="m-mp" style="display:none">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-tt" id="m-mp-tt">Nouvelle matière première</span>
+      <button class="modal-x" onclick="cm('m-mp')">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Nom</label>
+      <input type="text" id="mp-nom" placeholder="Farine T80" />
+    </div>
+
+    <div class="field">
+      <label>Stock initial</label>
+      <input type="number" id="mp-stock" step="0.001" min="0" placeholder="25" />
+    </div>
+
+    <div class="field">
+      <label>Unité</label>
+      <select id="mp-u">
+        <option value="kg">kg</option>
+        <option value="g">g</option>
+        <option value="L">L</option>
+        <option value="mL">mL</option>
+        <option value="u">u</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Coût unitaire (€)</label>
+      <input type="number" id="mp-cout" step="0.01" min="0" placeholder="0.85" />
+    </div>
+
+    <div class="field">
+      <label>Seuil critique</label>
+      <input type="number" id="mp-seuil" step="0.001" min="0" placeholder="5" />
+    </div>
+
+    <div class="field">
+      <label>Conditionnement</label>
+      <input type="text" id="mp-cond" placeholder="Sac 25kg" />
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-g" style="flex:1" onclick="saveMP()">Enregistrer</button>
+      <button class="btn btn-o" onclick="cm('m-mp')">Annuler</button>
+    </div>
+  </div>
+</div>
 
   <div class="modal-bg" id="m-nomen" style="display:none">
     <div class="modal">
@@ -584,22 +712,47 @@
     </div>
   </div>
 
-  <div class="modal-bg" id="m-user" style="display:none">
-    <div class="modal">
-      <div class="modal-hd"><span class="modal-tt">Ajouter un utilisateur</span><button class="modal-x"
-          onclick="cm('m-user')">✕</button></div>
-      <div class="field"><label>Nom</label><input type="text" id="u-nom" placeholder="Jean Dupont" /></div>
-      <div class="field"><label>Email</label><input type="email" id="u-email" placeholder="jean@boulangerie.fr" /></div>
-      <div class="field"><label>Rôle</label><select id="u-role">
-          <option>Vendeur</option>
-          <option>Gestionnaire</option>
-          <option>Gérant</option>
-        </select></div>
-      <div class="rgpd-box">🔒 L'email sera utilisé uniquement pour l'accès à la plateforme. Conformément au RGPD, cet
-        utilisateur peut demander la suppression de son compte à tout moment.</div>
-      <button class="btn btn-g" style="width:100%;margin-top:10px" onclick="saveUser()">Créer</button>
+<div class="modal-bg" id="m-user" style="display:none">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-tt" id="m-user-tt">Ajouter un utilisateur</span>
+      <button class="modal-x" onclick="cm('m-user')">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Nom</label>
+      <input type="text" id="u-nom" placeholder="Jean Dupont" />
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="u-email" placeholder="jean@boulangerie.fr" />
+    </div>
+
+    <div class="field">
+      <label>Rôle</label>
+      <select id="u-role">
+        <option>Vendeur</option>
+        <option>Pâtissier</option>
+        <option>Gestionnaire</option>
+        <option>Gérant</option>
+      </select>
+    </div>
+
+    <div class="info-box" id="u-rights-preview">
+      Accès accordés : Caisse, Commandes
+    </div>
+
+    <div class="rgpd-box">
+      🔒 L'email sera utilisé uniquement pour l'accès à la plateforme. Conformément au RGPD, cet utilisateur peut demander la suppression de son compte à tout moment.
+    </div>
+
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-g" style="flex:1" onclick="saveUser()">Enregistrer</button>
+      <button class="btn btn-o" onclick="cm('m-user')">Annuler</button>
     </div>
   </div>
+</div>
 
   <div class="suc-bg" id="m-suc" style="display:none">
     <div class="suc-box">

@@ -18,7 +18,7 @@ const DEFAULT = {
         { id: 12, nom: 'Camp 2L 1kg', prix: 4.30, qty: 8, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.70 }] },
         { id: 13, nom: 'Camp 2LG 500g', prix: 2.50, qty: 10, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.35 }] },
         { id: 14, nom: 'Camp 2LG 1kg', prix: 4.50, qty: 6, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.70 }] },
-        { id: 15, nom: 'Sportif 500g', prix: 5, qty: 15, desc: '', e:'', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.35 }] },
+        { id: 15, nom: 'Sportif 500g', prix: 5, qty: 15, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.35 }] },
         { id: 16, nom: 'Sarrazin 500g', prix: 2.80, qty: 12, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 15, qte: 0.35 }] },
         { id: 17, nom: 'Brié', prix: 5.00, qty: 8, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 15, qte: 0.70 }] },
         { id: 18, nom: 'Métail 500g', prix: 2.50, qty: 10, desc: '', e: '', online: true, tva: 0.055, nomen: [{ mpId: 1, qte: 0.20 }] },
@@ -72,9 +72,9 @@ const DEFAULT = {
         { id: 17, nom: 'Purée Citron', stock: 2.0, u: 'kg', cout: 18.0, seuil: 0.5, cond: 'Pot 1kg' }
     ],
     users: [
-        { id: 1, nom: 'Maxime Bernard', role: 'Gérant', email: 'maxime@boulangerie.fr', acces: 'Tout' },
-        { id: 2, nom: 'Lucie Morin', role: 'Vendeur', email: 'lucie@boulangerie.fr', acces: 'Caisse, Stock' },
-        { id: 3, nom: 'Thomas Petit', role: 'Pâtissier', email: 'thomas@boulangerie.fr', acces: 'Stock, Articles' }
+        { id: 1, nom: 'Gérant', role: 'Gérant', email: 'maxime@boulangerie.fr', acces: 'Tout' },
+        { id: 2, nom: 'Vendeur', role: 'Vendeur', email: 'lucie@boulangerie.fr', acces: 'Caisse, Stock' },
+        { id: 3, nom: 'Pâtissier', role: 'Pâtissier', email: 'thomas@boulangerie.fr', acces: 'Stock, Articles' }
     ],
     suivi: { rec: 0, ht: 0, tvaCol: 0, nb: 0, esp: 0, cb: 0, chq: 0, marge: 0, byArt: {}, hist: [] },
     // Simulation d'un historique passé
@@ -97,10 +97,33 @@ function loadState() {
 function saveState() {
     try { localStorage.setItem('localco_v2', JSON.stringify(S)); } catch (e) { }
 }
-const S = loadState();
-// Assurer que nomen existe sur les articles chargés
-S.arts.forEach(a => { if (!a.nomen) a.nomen = []; if (!a.tva) a.tva = 0.055; });
 
+const S = loadState();
+
+// Assurer que nomen existe sur les articles chargés
+S.arts.forEach(a => {
+    if (!a.nomen) a.nomen = [];
+    if (!a.tva) a.tva = 0.055;
+});
+
+// Harmoniser les accès utilisateurs déjà présents
+if (!S.users) S.users = [];
+S.users = S.users.map(u => ({
+    ...u,
+    acces: u.role === 'Gérant'
+        ? 'Tout'
+        : u.role === 'Gestionnaire'
+            ? 'Caisse, Commandes, Stock, Articles, Suivi'
+            : u.role === 'Pâtissier'
+                ? 'Stock, Articles'
+                : 'Caisse, Commandes'
+}));
+
+if (!S.currentUserId || !S.users.find(u => u.id === S.currentUserId)) {
+    S.currentUserId = S.users[0]?.id || null;
+}
+if (typeof S.editMP === 'undefined') S.editMP = null;
+if (typeof S.editArt === 'undefined') S.editArt = null;
 // ══════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════
@@ -196,39 +219,73 @@ function updCart() {
 function toggleCart() { document.getElementById('c-panel').classList.toggle('open'); document.getElementById('c-overlay').classList.toggle('open'); }
 
 function passerCommande() {
+    const errBox = document.getElementById('c-stock-err');
     const nom = document.getElementById('cl-nom').value.trim();
     const email = document.getElementById('cl-email').value.trim();
-    if (!nom || !email) { document.getElementById('c-stock-err').textContent = 'Veuillez saisir votre nom et email.'; document.getElementById('c-stock-err').style.display = 'block'; return; }
-    const entries = Object.entries(S.cart);
-    if (!entries.length) { document.getElementById('c-stock-err').textContent = 'Votre panier est vide.'; document.getElementById('c-stock-err').style.display = 'block'; return; }
-
-    // Vérification stock en temps réel
-    const errStock = [];
-    entries.forEach(([id, q]) => { const a = S.arts.find(x => x.id == id); if (a && q > a.qty) errStock.push(`${a.nom} (dispo: ${a.qty}, demandé: ${q})`); });
-    if (errStock.length) { document.getElementById('c-stock-err').textContent = 'Stock insuffisant : ' + errStock.join(', '); document.getElementById('c-stock-err').style.display = 'block'; return; }
-    document.getElementById('c-stock-err').style.display = 'none';
-
-    const arts = entries.map(([id, q]) => { const a = S.arts.find(x => x.id == id); return { id: a.id, nom: a.nom, qty: q, prix: a.prix, e: a.e, tva: a.tva }; });
-    const tot = arts.reduce((s, a) => s + a.qty * a.prix, 0);
+    const tel = document.getElementById('cl-tel').value.trim();
     const lieu = document.getElementById('cl-lieu').value;
     const date = document.getElementById('cl-date').value;
-    const tel = document.getElementById('cl-tel').value;
+    const entries = Object.entries(S.cart);
 
-    const cmd = { id: S.nid++, nom, email, tel, arts, tot, lieu, date: date || 'À définir', statut: 'nouvelle', ts: new Date().toISOString() };
+    const showError = (msg) => {
+        errBox.textContent = msg;
+        errBox.style.display = 'block';
+    };
+
+    if (!entries.length) return showError('Votre panier est vide.');
+    if (!nom || !email) return showError('Veuillez saisir votre nom et votre email.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Veuillez saisir une adresse email valide.');
+    if (tel && !/^[0-9+\s().-]{8,}$/.test(tel)) return showError('Veuillez saisir un numéro de téléphone valide.');
+    if (!date) return showError('Veuillez choisir une date de retrait.');
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (date < todayStr) return showError('La date de retrait ne peut pas être dans le passé.');
+
+    const errStock = [];
+    entries.forEach(([id, q]) => {
+        const a = S.arts.find(x => x.id == id);
+        if (a && q > a.qty) errStock.push(`${a.nom} (dispo : ${a.qty}, demandé : ${q})`);
+    });
+    if (errStock.length) return showError('Stock insuffisant : ' + errStock.join(', '));
+
+    errBox.style.display = 'none';
+
+    const arts = entries.map(([id, q]) => {
+        const a = S.arts.find(x => x.id == id);
+        return { id: a.id, nom: a.nom, qty: q, prix: a.prix, e: a.e, tva: a.tva };
+    });
+
+    const tot = arts.reduce((s, a) => s + a.qty * a.prix, 0);
+
+    const cmd = {
+        id: S.nid++,
+        nom,
+        email,
+        tel,
+        arts,
+        tot,
+        lieu,
+        date,
+        statut: 'nouvelle',
+        ts: new Date().toISOString()
+    };
+
     S.cmds.push(cmd);
 
-    // Réservation du stock (on réduit le stock disponible pour éviter survente)
-    arts.forEach(a => { const art = S.arts.find(x => x.id === a.id); if (art) art.qty = Math.max(0, art.qty - a.qty); });
+    arts.forEach(a => {
+        const art = S.arts.find(x => x.id === a.id);
+        if (art) art.qty = Math.max(0, art.qty - a.qty);
+    });
 
     S.cart = {};
-    saveState(); updCart();
+    saveState();
+    updCart();
     document.getElementById('c-panel').classList.remove('open');
     document.getElementById('c-overlay').classList.remove('open');
 
-    // Récapitulatif simulant un email
-    const recap = `De : commande@boulangerie-maxime.fr
+    const recap = `De : commande@lescocottesdediane.fr
 À : ${email}
-Objet : Confirmation de commande LOCAL CO
+Objet : Confirmation de commande Les Cocottes de Diane
 
 Bonjour ${nom},
 
@@ -240,11 +297,11 @@ ${arts.map(a => `  ${a.e} ${a.nom}  ×${a.qty}  ${fmt(a.prix * a.qty)}`).join('\
 Total TTC : ${fmt(tot)}
 
 Lieu de retrait : ${lieu}
-Date : ${date || 'À convenir'}
-Paiement : Au retrait (CB ou espèces)
+Date : ${date}
+Paiement : Au retrait
 
 Merci et à bientôt !
-Boulangerie Maxime · 06 XX XX XX XX`;
+Les Cocottes de Diane · contact@lescocottesdediane.fr`;
 
     document.getElementById('c-recap').textContent = recap;
     document.getElementById('c-shop').style.display = 'none';
@@ -262,12 +319,30 @@ function resetClient() {
 //  MERCHANT NAV
 // ══════════════════════════════════════════
 function showS(name, btn) {
+    if (!hasPerm(name)) {
+        alert(`Accès refusé : le rôle "${currentUser()?.role || 'Inconnu'}" n'a pas accès à "${name}".`);
+        return;
+    }
+
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-it,.bn-it').forEach(b => b.classList.remove('active'));
-    document.getElementById('sc-' + name).classList.add('active');
+
+    const target = document.getElementById('sc-' + name);
+    if (!target) return;
+
+    target.classList.add('active');
     document.querySelectorAll(`[data-s="${name}"]`).forEach(b => b.classList.add('active'));
     if (btn) btn.classList.add('active');
-    const renders = { stock: renderStock, articles: renderArtCards, commandes: renderCmds, suivi: renderSuivi, cloture: renderCloture, users: renderUsers };
+
+    const renders = {
+        stock: renderStock,
+        articles: renderArtCards,
+        commandes: renderCmds,
+        suivi: renderSuivi,
+        cloture: renderCloture,
+        users: renderUsers
+    };
+
     if (renders[name]) renders[name]();
     window.scrollTo(0, 0);
 }
@@ -346,6 +421,7 @@ document.getElementById('rem-in').addEventListener('input', renderPan);
 document.getElementById('tva-sel').addEventListener('change', renderPan);
 
 function encaisser(mode) {
+    if (!requirePerm('caisse', "Ce compte ne peut pas utiliser la caisse.")) return;
     if (!S.panier.length) return;
     const rem = parseFloat(document.getElementById('rem-in').value) || 0;
     const ttc = S.panier.reduce((s, p) => s + p.prix * p.qty, 0) * (1 - rem / 100);
@@ -411,31 +487,49 @@ function mkTicket(t) {
 // ══════════════════════════════════════════
 function renderCmds() {
     const el = document.getElementById('cmd-list');
-    const pending = S.cmds.filter(c => c.statut !== 'traitée' && c.statut !== 'annulée');
-    if (!pending.length) { el.innerHTML = '<div style="color:var(--text2);font-size:14px;padding:32px;text-align:center">✓ Aucune commande en attente</div>'; return; }
-    el.innerHTML = pending.map(c => `<div class="cmd-card ${c.statut === 'nouvelle' ? 'new' : ''}">
+    const actives = S.cmds.filter(c => c.statut !== 'traitée' && c.statut !== 'annulée');
+    if (!actives.length) { el.innerHTML = '<div style="color:var(--text2);font-size:14px;padding:32px;text-align:center">✓ Aucune commande en attente</div>'; return; }
+    const badgeInfo = {
+        'nouvelle': { cls: 'cmd-state-new', label: 'À préparer' },
+        'en attente': { cls: 'cmd-state-new', label: 'À préparer' },
+        'preparee': { cls: 'cmd-state-ready', label: 'Préparée' },
+    };
+    el.innerHTML = actives.map(c => {
+        const bi = badgeInfo[c.statut] || badgeInfo['nouvelle'];
+        const isPrepared = c.statut === 'preparee';
+        return `<div class="cmd-card cmd-card--${isPrepared ? 'ready' : 'new'}">
     <div class="cmd-hd">
-      <div><div class="cmd-nm">${esc(c.nom)}${c.statut === 'nouvelle' ? '<span class="ndot"></span>' : ''}</div>
+      <div><div class="cmd-nm">${esc(c.nom)}${!isPrepared ? '<span class="ndot"></span>' : ''}</div>
       <div class="cmd-mt">📧 ${esc(c.email)} · 📞 ${esc(c.tel || '—')}</div></div>
-      <span class="badge ${c.statut === 'nouvelle' ? 'bb' : 'bo'}">${c.statut === 'nouvelle' ? 'Nouvelle' : 'En attente'}</span>
+      <span class="badge ${bi.cls}">${bi.label}</span>
     </div>
     <div class="cmd-arts">${c.arts.map(a => `${esc(a.e)} ${esc(a.nom)} ×${a.qty}`).join(' · ')}</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:9px">📍 ${esc(c.lieu)} · 🗓 ${esc(c.date)}</div>
     <div class="cmd-ft">
       <div class="cmd-tot">${fmt(c.tot)}</div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-g" style="font-size:12px;padding:7px 12px" onclick="traiterCmd(${c.id})">✓ Traiter</button>
-        <button class="btn btn-o" style="font-size:12px;padding:7px 12px" onclick="annulerCmd(${c.id})">✕</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${!isPrepared
+                ? `<button class="btn cmd-btn-ready" style="font-size:12px;padding:7px 12px" onclick="preparerCmd(${c.id})">✓ Préparée</button>`
+                : `<button class="btn cmd-btn-done" style="font-size:12px;padding:7px 12px" onclick="traiterCmd(${c.id})">✅ Traité → Compta</button>`
+            }
+        <button class="btn btn-o" style="font-size:12px;padding:7px 12px" onclick="annulerCmd(${c.id})">✕ Annuler</button>
       </div>
     </div>
-  </div>`).join('');
+  </div>`;
+    }).join('');
     S.cmds.forEach(c => { if (c.statut === 'nouvelle') c.statut = 'en attente'; });
     saveState(); updBadge();
 }
 
+function preparerCmd(id) {
+    const c = S.cmds.find(x => x.id === id); if (!c) return;
+    c.statut = 'preparee';
+    saveState(); renderCmds(); updBadge();
+    suc('Commande préparée', `${c.nom} — prête à être remise`);
+}
+
 function traiterCmd(id) {
     const c = S.cmds.find(x => x.id === id); if (!c) return;
-    // Stock déjà réservé à la commande, on décrémente juste les MP
     c.arts.forEach(a => {
         const art = S.arts.find(x => x.id === a.id);
         if (art) decrementerMP(art, a.qty);
@@ -450,11 +544,11 @@ function traiterCmd(id) {
     S.suivi.nb++; S.suivi.cb += c.tot;
     S.suivi.hist.unshift({ h: new Date().toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' }), arts: c.arts, ttc: c.tot, ht: c.tot - tvaCmd, tvaCol: tvaCmd, mode: 'cmd en ligne', rem: 0 });
     c.statut = 'traitée';
-    saveState(); renderCmds(); updBadge(); suc('Commande traitée', `${c.nom} — ${fmt(c.tot)}`);
+    saveState(); renderCmds(); updBadge(); suc('Commande traitée', `${c.nom} — ${fmt(c.tot)} ajouté en compta`);
 }
+
 function annulerCmd(id) {
     const c = S.cmds.find(x => x.id === id); if (!c) return;
-    // Remettre le stock
     c.arts.forEach(a => { const art = S.arts.find(x => x.id === a.id); if (art) art.qty += a.qty; });
     c.statut = 'annulée'; saveState(); renderCmds(); updBadge();
 }
@@ -462,49 +556,199 @@ function annulerCmd(id) {
 // ══════════════════════════════════════════
 //  STOCK
 // ══════════════════════════════════════════
+const mpStatut = m => { const p = m.stock / (m.seuil * 3.33) * 100; return p >= 100 ? 'ok' : p >= 50 ? 'moyen' : 'critique'; };
+const artStatut = a => a.qty > (a.seuil || 10) ? 'ok' : a.qty > (a.seuil || 2) ? 'moyen' : 'critique';
+
 function renderStock() {
-    document.getElementById('mp-tbody').innerHTML = S.mps.map(m => `<tr>
+    const mpFilter = (document.getElementById('mp-filter-status') || {}).value || 'all';
+    const mpSort = (document.getElementById('mp-sort') || {}).value || 'nom';
+    const statutOrder = { critique: 0, moyen: 1, ok: 2 };
+
+    let mps = [...S.mps];
+    if (mpFilter !== 'all') mps = mps.filter(m => mpStatut(m) === mpFilter);
+    mps.sort((a, b) => {
+        if (mpSort === 'stock-asc') return a.stock - b.stock;
+        if (mpSort === 'stock-desc') return b.stock - a.stock;
+        if (mpSort === 'valeur-desc') return (b.cout * b.stock) - (a.cout * a.stock);
+        if (mpSort === 'statut') return statutOrder[mpStatut(a)] - statutOrder[mpStatut(b)];
+        return a.nom.localeCompare(b.nom, 'fr');
+    });
+
+    document.getElementById('mp-tbody').innerHTML = mps.length
+        ? mps.map(m => `<tr>
     <td><span class="dot" style="background:${sdot(m)}"></span>${esc(m.nom)}</td>
-    <td><strong>${m.stock} ${esc(m.u)}</strong></td><td>${esc(m.cond)}</td>
-    <td>${fmt(m.cout)}</td><td>${fmt(m.cout * m.stock)}</td><td>${sbadge(m)}</td></tr>`).join('');
-    document.getElementById('mp-cards').innerHTML = S.mps.map(m => `<div class="mob-card">
-    <div class="mc-row"><span style="font-weight:700;font-size:14px"><span class="dot" style="background:${sdot(m)}"></span>${esc(m.nom)}</span>${sbadge(m)}</div>
+    <td><strong>${m.stock} ${esc(m.u)}</strong></td>
+    <td>${m.seuil} ${esc(m.u)}</td>
+    <td>${esc(m.cond)}</td>
+    <td>${fmt(m.cout)}</td>
+    <td>${fmt(m.cout * m.stock)}</td>
+    <td>${sbadge(m)}</td>
+    <td>
+    <button class="btn btn-o" style="font-size:11px;padding:6px 10px" onclick="editMP(${m.id})">✏ Modifier</button>
+    </td>
+    </tr>`).join('')
+        : '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:18px">Aucune matière pour ce filtre</td></tr>';
+
+    document.getElementById('mp-cards').innerHTML = mps.map(m => `<div class="mob-card">
+    <div class="mc-row">
+    <span style="font-weight:700;font-size:14px"><span class="dot" style="background:${sdot(m)}"></span>${esc(m.nom)}</span>
+    ${sbadge(m)}
+    </div>
     <div class="mc-row"><span class="mc-label">Stock</span><span class="mc-val">${m.stock} ${esc(m.u)}</span></div>
+    <div class="mc-row"><span class="mc-label">Cond.</span><span class="mc-val">${esc(m.cond)}</span></div>
     <div class="mc-row"><span class="mc-label">Coût unit.</span><span class="mc-val">${fmt(m.cout)}</span></div>
+    <div class="mc-row"><span class="mc-label">Seuil critique</span><span class="mc-val">${m.seuil} ${esc(m.u)}</span></div>
     <div class="mc-row"><span class="mc-label">Valeur stock</span><span class="mc-val" style="font-weight:700;color:var(--green)">${fmt(m.cout * m.stock)}</span></div>
-  </div>`).join('');
+    <div style="margin-top:8px">
+    <button class="btn btn-o" style="width:100%;font-size:12px" onclick="editMP(${m.id})">✏ Modifier</button>
+    </div>
+    </div>`).join('');
 
     const tot = S.mps.reduce((s, m) => s + m.cout * m.stock, 0);
     document.getElementById('v-mp').textContent = fmt(tot);
-    document.getElementById('cnt-o').textContent = S.mps.filter(m => { const p = m.stock / (m.seuil * 3.33) * 100; return p >= 50 && p < 100; }).length;
-    document.getElementById('cnt-r').textContent = S.mps.filter(m => m.stock / (m.seuil * 3.33) * 100 < 50).length;
+    document.getElementById('cnt-o').textContent = S.mps.filter(m => mpStatut(m) === 'moyen').length;
+    document.getElementById('cnt-r').textContent = S.mps.filter(m => mpStatut(m) === 'critique').length;
     const al = document.getElementById('st-alerts');
     al.innerHTML = S.mps.filter(m => m.stock < m.seuil).map(m => `<div class="alert-b ${m.stock < m.seuil * 0.3 ? 'alert-r' : 'alert-o'}">⚠ <strong>${esc(m.nom)}</strong> — ${m.stock} ${esc(m.u)} restants</div>`).join('');
 
-    document.getElementById('as-tbody').innerHTML = S.arts.map(a => {
-        const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout; const pct = cout > 0 ? (marge / htPrix * 100) : null;
-        return `<tr><td>${esc(a.e)} ${esc(a.nom)}</td><td><strong>${a.qty} u</strong></td><td>${fmt(a.prix)}</td>
+    const asFilter = (document.getElementById('as-filter-status') || {}).value || 'all';
+    const asSort = (document.getElementById('as-sort') || {}).value || 'nom';
+
+    let arts = [...S.arts];
+    if (asFilter !== 'all') arts = arts.filter(a => artStatut(a) === asFilter);
+    arts.sort((a, b) => {
+        if (asSort === 'stock-asc') return a.qty - b.qty;
+        if (asSort === 'stock-desc') return b.qty - a.qty;
+        if (asSort === 'prix-asc') return a.prix - b.prix;
+        if (asSort === 'prix-desc') return b.prix - a.prix;
+        if (asSort === 'marge-desc') return (b.prix / (1 + b.tva) - coutMP(b)) - (a.prix / (1 + a.tva) - coutMP(a));
+        if (asSort === 'statut') return statutOrder[artStatut(a)] - statutOrder[artStatut(b)];
+        return a.nom.localeCompare(b.nom, 'fr');
+    });
+
+    document.getElementById('as-tbody').innerHTML = arts.length
+        ? arts.map(a => {
+            const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout; const pct = cout > 0 ? (marge / htPrix * 100) : null;
+            const st = artStatut(a);
+            return `<tr><td>${esc(a.e)} ${esc(a.nom)}</td><td><strong>${a.qty} u</strong></td><td>${fmt(a.prix)}</td>
       <td>${fmt(cout)}</td>
       <td class="${marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(marge)}${pct !== null ? ` (${pct.toFixed(0)}%)` : ''}${!a.nomen || !a.nomen.length ? '<br><small style="color:var(--amber)">Nomenclature manquante</small>' : ''}</td>
-      <td><span class="badge ${a.qty > 10 ? 'bg' : a.qty > 2 ? 'bo' : 'br'}">${a.qty > 10 ? 'OK' : a.qty > 2 ? 'Moyen' : 'Critique'}</span></td></tr>`;
-    }).join('');
-    document.getElementById('as-cards').innerHTML = S.arts.map(a => {
-        const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout;
+      <td><span class="badge ${st === 'ok' ? 'bg' : st === 'moyen' ? 'bo' : 'br'}">${st === 'ok' ? 'OK' : st === 'moyen' ? 'Moyen' : 'Critique'}</span></td></tr>`;
+        }).join('')
+        : '<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:18px">Aucun article pour ce filtre</td></tr>';
+
+    document.getElementById('as-cards').innerHTML = arts.map(a => {
+        const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout; const st = artStatut(a);
         return `<div class="mob-card">
-      <div class="mc-row"><span style="font-weight:700;font-size:14px">${esc(a.e)} ${esc(a.nom)}</span><span class="badge ${a.qty > 10 ? 'bg' : a.qty > 2 ? 'bo' : 'br'}">${a.qty} u</span></div>
+      <div class="mc-row"><span style="font-weight:700;font-size:14px">${esc(a.e)} ${esc(a.nom)}</span><span class="badge ${st === 'ok' ? 'bg' : st === 'moyen' ? 'bo' : 'br'}">${a.qty} u</span></div>
       <div class="mc-row"><span class="mc-label">Prix TTC</span><span class="mc-val">${fmt(a.prix)}</span></div>
       <div class="mc-row"><span class="mc-label">Coût MP</span><span class="mc-val">${fmt(cout)}</span></div>
       <div class="mc-row"><span class="mc-label">Marge HT</span><span class="mc-val ${marge >= 0 ? 'marge-pos' : 'marge-neg'}">${fmt(marge)}</span></div>
     </div>`;
     }).join('');
+
     document.getElementById('r-mp').innerHTML = S.mps.map(m => `<option value="${m.id}">${esc(m.nom)}</option>`).join('');
+}
+
+function exportCSV(type) {
+    const date = new Date().toLocaleDateString('fr').replace(/\//g, '-');
+    let rows, filename;
+    if (type === 'mp') {
+        filename = `stock-matieres-${date}.csv`;
+        rows = [['Matière', 'Stock', 'Unité', 'Conditionnement', 'Coût unitaire (€)', 'Valeur stock (€)', 'Statut']];
+        S.mps.forEach(m => {
+            const st = mpStatut(m);
+            rows.push([m.nom, m.stock, m.u, m.cond, m.cout.toFixed(2), (m.cout * m.stock).toFixed(2),
+            st === 'ok' ? 'OK' : st === 'moyen' ? 'Moyen' : 'Critique']);
+        });
+    } else {
+        filename = `stock-articles-${date}.csv`;
+        rows = [['Article', 'Stock (u)', 'Prix TTC (€)', 'Coût MP (€)', 'Marge HT (€)', 'Marge (%)', 'Statut']];
+        S.arts.forEach(a => {
+            const cout = coutMP(a); const htPrix = a.prix / (1 + a.tva); const marge = htPrix - cout;
+            const pct = cout > 0 ? (marge / htPrix * 100).toFixed(1) : '—';
+            const st = artStatut(a);
+            rows.push([`${a.e} ${a.nom}`, a.qty, a.prix.toFixed(2), cout.toFixed(2), marge.toFixed(2), pct,
+            st === 'ok' ? 'OK' : st === 'moyen' ? 'Moyen' : 'Critique']);
+        });
+    }
+    const csv = '\uFEFF' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    URL.revokeObjectURL(a.href);
 }
 function openReappro() { renderStock(); document.getElementById('m-reappro').style.display = 'flex'; }
 function saveReappro() {
+    if (!requirePerm('stock', "Ce compte ne peut pas modifier le stock.")) return;
     const id = parseInt(document.getElementById('r-mp').value);
     const q = parseFloat(document.getElementById('r-qty').value) || 0;
     if (q <= 0) return; const m = S.mps.find(x => x.id === id);
     if (m) { m.stock += q; saveState(); cm('m-reappro'); renderStock(); suc('Stock mis à jour', `+${q} ${m.u} de ${m.nom}`); }
+}
+
+// ══════════════════════════════════════════
+//  MATIÈRES PREMIÈRES
+// ══════════════════════════════════════════
+function openMP() {
+    S.editMP = null;
+    document.getElementById('m-mp-tt').textContent = 'Nouvelle matière première';
+    document.getElementById('mp-nom').value = '';
+    document.getElementById('mp-stock').value = '';
+    document.getElementById('mp-u').value = 'kg';
+    document.getElementById('mp-cout').value = '';
+    document.getElementById('mp-seuil').value = '';
+    document.getElementById('mp-cond').value = '';
+    document.getElementById('m-mp').style.display = 'flex';
+}
+
+function editMP(id) {
+    const m = S.mps.find(x => x.id === id);
+    if (!m) return;
+
+    S.editMP = id;
+    document.getElementById('m-mp-tt').textContent = 'Modifier la matière première';
+    document.getElementById('mp-nom').value = m.nom;
+    document.getElementById('mp-stock').value = m.stock;
+    document.getElementById('mp-u').value = m.u;
+    document.getElementById('mp-cout').value = m.cout;
+    document.getElementById('mp-seuil').value = m.seuil;
+    document.getElementById('mp-cond').value = m.cond || '';
+    document.getElementById('m-mp').style.display = 'flex';
+}
+
+function saveMP() {
+    const nom = document.getElementById('mp-nom').value.trim();
+    const stock = parseFloat(document.getElementById('mp-stock').value) || 0;
+    const u = document.getElementById('mp-u').value;
+    const cout = parseFloat(document.getElementById('mp-cout').value) || 0;
+    const seuil = parseFloat(document.getElementById('mp-seuil').value) || 0;
+    const cond = document.getElementById('mp-cond').value.trim();
+
+    if (!nom) return;
+    if (cout < 0 || stock < 0 || seuil < 0) return;
+
+    if (S.editMP) {
+        Object.assign(S.mps.find(x => x.id === S.editMP), {
+            nom, stock, u, cout, seuil, cond
+        });
+    } else {
+        S.mps.push({
+            id: S.nid++,
+            nom,
+            stock,
+            u,
+            cout,
+            seuil,
+            cond
+        });
+    }
+
+    saveState();
+    cm('m-mp');
+    renderStock();
+    renderArtCards();
+    suc('Matière première enregistrée', nom);
 }
 
 // ══════════════════════════════════════════
@@ -542,14 +786,17 @@ function openArticle() {
 }
 function editArt(id) {
     const a = S.arts.find(x => x.id === id); S.editArt = id;
+    const seuil = parseInt(document.getElementById('a-seuil').value) || 0;
     document.getElementById('m-art-tt').textContent = 'Modifier';
     document.getElementById('a-nom').value = a.nom; document.getElementById('a-prix').value = a.prix;
     document.getElementById('a-qty').value = a.qty; document.getElementById('a-desc').value = a.desc;
     document.getElementById('a-emoji').value = a.e; document.getElementById('a-online').value = a.online ? '1' : '0';
     document.getElementById('a-tva').value = a.tva || 0.055;
+    document.getElementById('a-seuil').value = a.seuil || 10;
     document.getElementById('m-article').style.display = 'flex';
 }
 function saveArticle() {
+    if (!requirePerm('articles', "Ce compte ne peut pas modifier les articles.")) return;
     const nom = document.getElementById('a-nom').value.trim();
     const prix = parseFloat(document.getElementById('a-prix').value) || 0;
     const qty = parseInt(document.getElementById('a-qty').value) || 0;
@@ -557,9 +804,10 @@ function saveArticle() {
     const e = document.getElementById('a-emoji').value || '🥖';
     const online = document.getElementById('a-online').value === '1';
     const tva = parseFloat(document.getElementById('a-tva').value) || 0.055;
+    const seuil = parseInt(document.getElementById('a-seuil').value) || 0;
     if (!nom || prix <= 0) return;
-    if (S.editArt) { Object.assign(S.arts.find(x => x.id === S.editArt), { nom, prix, qty, desc, e, online, tva }); }
-    else S.arts.push({ id: S.nid++, nom, prix, qty, desc, e, online, tva, nomen: [] });
+    if (S.editArt) { Object.assign(S.arts.find(x => x.id === S.editArt), { nom, prix, qty, desc, e, online, tva, seuil }); }
+    else S.arts.push({ id: S.nid++, nom, prix, qty, desc, e, online, tva, seuil, nomen: [] });
     saveState(); cm('m-article'); renderArtCards(); renderCaisse(); suc('Article enregistré', nom);
 }
 
@@ -669,6 +917,7 @@ function renderCloture() {
 function toggleJour(i) { const el = document.getElementById('jd-' + i); if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
 
 function cloturerCaisse() {
+    if (!requirePerm('cloture', "Ce compte ne peut pas clôturer la caisse.")) return;
     if (S.suivi.nb === 0 && !confirm('Aucune vente aujourd\'hui. Clôturer quand même ?')) return;
     const j = { date: today(), rec: S.suivi.rec, ht: S.suivi.ht, tvaCol: S.suivi.tvaCol, nb: S.suivi.nb, esp: S.suivi.esp, cb: S.suivi.cb, chq: S.suivi.chq, marge: S.suivi.marge, byArt: JSON.parse(JSON.stringify(S.suivi.byArt)), hist: [...S.suivi.hist] };
     S.journees.push(j);
@@ -679,6 +928,7 @@ function cloturerCaisse() {
 }
 
 function exportCSV() {
+    if (!requirePerm('cloture', "Ce compte ne peut pas exporter les données de clôture.")) return;
     if (!S.journees.length) { alert('Aucune journée clôturée à exporter.'); return; }
     let csv = 'Date,CA TTC,CA HT,TVA,Nb ventes,Espèces,CB,Chèques,Marge\n';
     S.journees.forEach(j => {
@@ -691,30 +941,205 @@ function exportCSV() {
 }
 
 // ══════════════════════════════════════════
-//  USERS
+//  USERS / ROLES / PERMISSIONS
 // ══════════════════════════════════════════
-function renderUsers() {
-    document.getElementById('u-tbody').innerHTML = S.users.map(u => `<tr>
-    <td><strong>${esc(u.nom)}</strong></td><td><span class="badge bg">${esc(u.role)}</span></td>
-    <td>${esc(u.email)}</td><td>${esc(u.acces)}</td>
-    <td><button class="btn btn-o" style="font-size:12px;padding:5px 9px" onclick="delUser(${u.id})">Supprimer</button></td></tr>`).join('');
-    document.getElementById('u-cards').innerHTML = S.users.map(u => `<div class="mob-card">
-    <div class="mc-row"><span style="font-weight:700;font-size:14px">${esc(u.nom)}</span><span class="badge bg">${esc(u.role)}</span></div>
-    <div class="mc-row"><span class="mc-label">Email</span><span class="mc-val">${esc(u.email)}</span></div>
-    <div class="mc-row"><span class="mc-label">Accès</span><span class="mc-val">${esc(u.acces)}</span></div>
-    <div style="margin-top:8px"><button class="btn btn-o" style="font-size:12px;padding:7px 12px" onclick="delUser(${u.id})">Supprimer</button></div>
-  </div>`).join('');
+const ROLE_PERMS = {
+    'Gérant': ['caisse', 'commandes', 'stock', 'articles', 'suivi', 'cloture', 'users'],
+    'Gestionnaire': ['caisse', 'commandes', 'stock', 'articles', 'suivi'],
+    'Vendeur': ['caisse', 'commandes'],
+    'Pâtissier': ['stock', 'articles']
+};
+
+function rightsLabel(role) {
+    const perms = ROLE_PERMS[role] || [];
+    if (perms.length === 7) return 'Tout';
+    return perms.map(p => {
+        if (p === 'caisse') return 'Caisse';
+        if (p === 'commandes') return 'Commandes';
+        if (p === 'stock') return 'Stock';
+        if (p === 'articles') return 'Articles';
+        if (p === 'suivi') return 'Suivi';
+        if (p === 'cloture') return 'Clôture';
+        if (p === 'users') return 'Utilisateurs';
+        return p;
+    }).join(', ');
 }
+
+if (!S.currentUserId || !S.users.find(u => u.id === S.currentUserId)) {
+    S.currentUserId = S.users[0]?.id || null;
+    saveState();
+}
+
+function currentUser() {
+    return S.users.find(u => u.id === S.currentUserId) || S.users[0] || null;
+}
+
+function hasPerm(screen) {
+    const u = currentUser();
+    if (!u) return false;
+    return (ROLE_PERMS[u.role] || []).includes(screen);
+}
+
+function requirePerm(screen, msg = "Vous n'avez pas les droits pour cette action.") {
+    if (hasPerm(screen)) return true;
+    alert(msg);
+    return false;
+}
+
+function userInitials(nom) {
+    return String(nom || '')
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(x => x[0]?.toUpperCase() || '')
+        .join('');
+}
+
+function refreshCurrentUserUI() {
+    const u = currentUser();
+    if (!u) return;
+
+    const av = document.getElementById('cur-u-av');
+    const name = document.getElementById('cur-u-name');
+    const role = document.getElementById('cur-u-role');
+
+    if (av) av.textContent = userInitials(u.nom);
+    if (name) name.textContent = u.nom;
+    if (role) role.textContent = u.role;
+}
+
+function renderUserSwitcher() {
+    const sel = document.getElementById('current-user-select');
+    if (!sel) return;
+
+    sel.innerHTML = S.users.map(u =>
+        `<option value="${u.id}" ${u.id === S.currentUserId ? 'selected' : ''}>${esc(u.nom)} — ${esc(u.role)}</option>`
+    ).join('');
+}
+
+function switchCurrentUser(id) {
+    S.currentUserId = Number(id);
+    saveState();
+    refreshCurrentUserUI();
+    renderPermissionsUI();
+
+    const active = document.querySelector('.screen.active');
+    if (active) {
+        const screen = active.id.replace('sc-', '');
+        if (!hasPerm(screen)) {
+            const fallback = ['caisse', 'commandes', 'stock', 'articles', 'suivi', 'cloture', 'users']
+                .find(s => hasPerm(s));
+            if (fallback) showS(fallback);
+        }
+    }
+
+    suc('Compte actif changé', `${currentUser().nom} · ${currentUser().role}`);
+}
+
+function renderPermissionsUI() {
+    document.querySelectorAll('.nav-it, .bn-it').forEach(btn => {
+        const screen = btn.dataset.s;
+        if (!screen) return;
+        btn.style.display = hasPerm(screen) ? '' : 'none';
+    });
+
+    const userScreen = document.getElementById('sc-users');
+    if (userScreen) userScreen.style.display = hasPerm('users') ? '' : 'none';
+
+    const addUserBtn = document.querySelector('#sc-users .btn.btn-g');
+    if (addUserBtn) addUserBtn.style.display = hasPerm('users') ? '' : 'none';
+
+    const openUserBtn = document.querySelector('[onclick="document.getElementById(\'m-user\').style.display=\'flex\'"]');
+    if (openUserBtn) openUserBtn.style.display = hasPerm('users') ? '' : 'none';
+}
+
+function renderUsers() {
+    const canManageUsers = hasPerm('users');
+
+    document.getElementById('u-tbody').innerHTML = S.users.map(u => `
+        <tr>
+            <td><strong>${esc(u.nom)}</strong>${u.id === S.currentUserId ? ' <span class="badge bb">Connecté</span>' : ''}</td>
+            <td><span class="badge bg">${esc(u.role)}</span></td>
+            <td>${esc(u.email)}</td>
+            <td>${esc(rightsLabel(u.role))}</td>
+            <td style="white-space:nowrap">
+                <button class="btn btn-o" style="font-size:12px;padding:5px 9px" onclick="switchCurrentUser(${u.id})">Se connecter</button>
+                ${canManageUsers && u.id !== S.currentUserId
+                    ? `<button class="btn btn-o" style="font-size:12px;padding:5px 9px;margin-left:6px" onclick="delUser(${u.id})">Supprimer</button>`
+                    : ''
+                }
+            </td>
+        </tr>
+    `).join('');
+
+    document.getElementById('u-cards').innerHTML = S.users.map(u => `
+        <div class="mob-card">
+            <div class="mc-row">
+                <span style="font-weight:700;font-size:14px">${esc(u.nom)}</span>
+                <span class="badge bg">${esc(u.role)}</span>
+            </div>
+            <div class="mc-row"><span class="mc-label">Email</span><span class="mc-val">${esc(u.email)}</span></div>
+            <div class="mc-row"><span class="mc-label">Accès</span><span class="mc-val">${esc(rightsLabel(u.role))}</span></div>
+            <div class="mc-row"><span class="mc-label">État</span><span class="mc-val">${u.id === S.currentUserId ? 'Compte actif' : 'Inactif'}</span></div>
+            <div class="btn-row" style="margin-top:8px">
+                <button class="btn btn-o" style="font-size:12px;padding:7px 12px" onclick="switchCurrentUser(${u.id})">Se connecter</button>
+                ${canManageUsers && u.id !== S.currentUserId
+                    ? `<button class="btn btn-o" style="font-size:12px;padding:7px 12px" onclick="delUser(${u.id})">Supprimer</button>`
+                    : ''
+                }
+            </div>
+        </div>
+    `).join('');
+
+    renderUserSwitcher();
+    refreshCurrentUserUI();
+}
+
+function updateUserRightsPreview() {
+    const role = document.getElementById('u-role')?.value || 'Vendeur';
+    const box = document.getElementById('u-rights-preview');
+    if (box) box.innerHTML = `Accès accordés : <strong>${rightsLabel(role)}</strong>`;
+}
+
 function saveUser() {
+    if (!requirePerm('users', "Seul le gérant peut gérer les utilisateurs.")) return;
+
     const nom = document.getElementById('u-nom').value.trim();
     const email = document.getElementById('u-email').value.trim();
     const role = document.getElementById('u-role').value;
-    if (!nom) return;
-    const acces = role === 'Gérant' ? 'Tout' : role === 'Gestionnaire' ? 'Caisse, Stock, Articles' : 'Caisse';
-    S.users.push({ id: S.nid++, nom, email, role, acces });
-    saveState(); cm('m-user'); renderUsers(); suc('Utilisateur créé', nom + ' · ' + role);
+
+    if (!nom) return alert('Veuillez saisir un nom.');
+    if (!email) return alert('Veuillez saisir un email.');
+
+    S.users.push({
+        id: S.nid++,
+        nom,
+        email,
+        role,
+        acces: rightsLabel(role)
+    });
+
+    saveState();
+    cm('m-user');
+    renderUsers();
+    renderPermissionsUI();
+    suc('Utilisateur créé', `${nom} · ${role}`);
 }
-function delUser(id) { if (!confirm('Supprimer ?')) return; S.users = S.users.filter(u => u.id !== id); saveState(); renderUsers(); }
+
+function delUser(id) {
+    if (!requirePerm('users', "Seul le gérant peut supprimer un utilisateur.")) return;
+    if (id === S.currentUserId) return alert("Impossible de supprimer le compte actuellement connecté.");
+    if (!confirm('Supprimer cet utilisateur ?')) return;
+
+    S.users = S.users.filter(u => u.id !== id);
+    saveState();
+    renderUsers();
+    renderUserSwitcher();
+}
+
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'u-role') updateUserRightsPreview();
+});
 
 // UTILS
 function cm(id) { document.getElementById(id).style.display = 'none'; }
@@ -724,43 +1149,36 @@ function toggleSidebar() {
     document.querySelector(".sidebar").classList.toggle("collapsed");
 }
 function filterMerchantArticles() {
-    const query = document.getElementById('art-search').value.toLowerCase();
+    const query = document.getElementById('art-search').value.toLowerCase().trim();
     const statusFilter = document.getElementById('filter-status').value;
     const sortFilter = document.getElementById('filter-sort').value;
 
-    // Utilisation de DEFAULT au lieu de data
     let filtered = [...S.arts];
 
-    // 1. Filtrage
     if (query) {
         filtered = filtered.filter(a =>
-            a.nom.toLowerCase().includes(query) || a.desc.toLowerCase().includes(query)
+            a.nom.toLowerCase().includes(query) ||
+            (a.desc || '').toLowerCase().includes(query)
         );
     }
-    if (statusFilter !== 'all') {
-        if (statusFilter === 'online') filtered = filtered.filter(a => a.online);
-        if (statusFilter === 'offline') filtered = filtered.filter(a => !a.online);
-    }
 
-    // 2. Fonction utilitaire pour calculer la marge d'un article
+    if (statusFilter === 'online') filtered = filtered.filter(a => a.online);
+    if (statusFilter === 'offline') filtered = filtered.filter(a => !a.online);
+    if (statusFilter === 'stock') filtered = filtered.filter(a => a.qty > 0);
+    if (statusFilter === 'rupture') filtered = filtered.filter(a => a.qty <= 0);
+
     const getMarge = (art) => {
-        let coutMP = 0;
-        if (art.nomen) {
-            art.nomen.forEach(item => {
-                const mp = S.mps.find(m => m.id === item.mpId);
-                if (mp) coutMP += mp.cout * item.qte;
-            });
-        }
-        return art.prix - coutMP;
+        const cout = coutMP(art);
+        const prixHT = art.prix / (1 + (art.tva || 0.055));
+        return prixHT - cout;
     };
 
-    // 3. Tri (incluant la marge)
     filtered.sort((a, b) => {
         if (sortFilter === 'nom') return a.nom.localeCompare(b.nom);
         if (sortFilter === 'prix-asc') return a.prix - b.prix;
         if (sortFilter === 'prix-desc') return b.prix - a.prix;
         if (sortFilter === 'stock-desc') return b.qty - a.qty;
-        if (sortFilter === 'marge-desc') return getMarge(b) - getMarge(a); // Tri par marge décroissante
+        if (sortFilter === 'marge-desc') return getMarge(b) - getMarge(a);
         return 0;
     });
 
@@ -811,7 +1229,7 @@ function renderMerchantArticles(list) {
 
             <div style="font-size:13px; margin-bottom:4px">
                 Coût MP : <b>${coutMP.toFixed(2)} €</b> · 
-                <span class="marge-pos">Marge : ${marge.toFixed(2)} €</span>
+                <span class="${marge >= 0 ? 'marge-pos' : 'marge-neg'}">Marge : ${marge.toFixed(2)} €</span>
             </div>
 
             <div style="font-size:11px; color:var(--text2); margin-bottom:12px; line-height:1.4">
@@ -825,7 +1243,7 @@ function renderMerchantArticles(list) {
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px">
-                <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="openEdit(${art.id})">➖ Modifier</button>
+                <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="editArt(${art.id})">✏ Modifier</button> 
                 <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="openNomen(${art.id})">⚖️ Nomen.</button>
                 <button class="btn btn-o" style="padding:6px 2px; font-size:11px" onclick="openPerte(${art.id})">📋 Perte</button>
             </div>
@@ -833,3 +1251,8 @@ function renderMerchantArticles(list) {
         `;
     }).join('');
 }
+
+renderUserSwitcher();
+refreshCurrentUserUI();
+renderPermissionsUI();
+updateUserRightsPreview();
